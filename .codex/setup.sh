@@ -2,15 +2,30 @@
 set -euo pipefail
 export DEBIAN_FRONTEND=noninteractive
 
+FAIL_LOG=/tmp/setup_failures.log
+touch "$FAIL_LOG"
+
 #— helper to pin to the repo’s exact version if it exists
 apt_pin_install(){
   pkg="$1"
   ver=$(apt-cache show "$pkg" 2>/dev/null \
         | awk '/^Version:/{print $2; exit}')
   if [ -n "$ver" ]; then
-    apt-get install -y "${pkg}=${ver}"
+    install_cmd=(apt-get install -y "${pkg}=${ver}")
   else
-    apt-get install -y "$pkg"
+    install_cmd=(apt-get install -y "$pkg")
+  fi
+  if ! "${install_cmd[@]}"; then
+    echo "$pkg" >> "$FAIL_LOG"
+    # Attempt python fallback if applicable
+    if [[ "$pkg" == python3-* ]]; then
+      pip_pkg="${pkg#python3-}"
+      pip3 install --no-cache-dir "$pip_pkg" \
+        || echo "pip3 install $pip_pkg failed" >> "$FAIL_LOG"
+    elif [[ "$pkg" == pre-commit ]]; then
+      pip3 install --no-cache-dir pre-commit \
+        || echo "pip3 install pre-commit failed" >> "$FAIL_LOG"
+    fi
   fi
 }
 
@@ -19,7 +34,9 @@ for arch in i386 armel armhf arm64 riscv64 powerpc ppc64el ia64; do
   dpkg --add-architecture "$arch"
 done
 
-apt-get update -y
+if ! apt-get update -y; then
+  echo "apt-get update failed" >> "$FAIL_LOG"
+fi
 
 #— core build tools, formatters, analysis, science libs
 for pkg in \
@@ -37,7 +54,9 @@ done
 
 # ensure pre-commit is available
 if ! command -v pre-commit >/dev/null 2>&1; then
-  pip3 install --no-cache-dir pre-commit
+  if ! pip3 install --no-cache-dir pre-commit; then
+    echo "pip3 install pre-commit failed" >> "$FAIL_LOG"
+  fi
 fi
 
 # ensure yacc command exists
@@ -59,9 +78,11 @@ for pkg in \
   apt_pin_install "$pkg"
 done
 
-pip3 install --no-cache-dir \
+if ! pip3 install --no-cache-dir \
   tensorflow-cpu jax jaxlib \
-  tensorflow-model-optimization mlflow onnxruntime-tools
+  tensorflow-model-optimization mlflow onnxruntime-tools; then
+  echo "pip3 install ML packages failed" >> "$FAIL_LOG"
+fi
 
 #— QEMU emulation for foreign binaries
 for pkg in \
@@ -136,19 +157,27 @@ for pkg in \
 done
 
 #— IA-16 (8086/286) cross-compiler
-IA16_VER=$(curl -fsSL https://api.github.com/repos/tkchia/gcc-ia16/releases/latest \
-           | awk -F\" '/tag_name/{print $4; exit}')
-curl -fsSL "https://github.com/tkchia/gcc-ia16/releases/download/${IA16_VER}/ia16-elf-gcc-linux64.tar.xz" \
-  | tar -Jx -C /opt
-echo 'export PATH=/opt/ia16-elf-gcc/bin:$PATH' > /etc/profile.d/ia16.sh
-export PATH=/opt/ia16-elf-gcc/bin:$PATH
+if IA16_VER=$(curl -fsSL https://api.github.com/repos/tkchia/gcc-ia16/releases/latest \
+               | awk -F\" '/tag_name/{print $4; exit}'); then
+  if curl -fsSL "https://github.com/tkchia/gcc-ia16/releases/download/${IA16_VER}/ia16-elf-gcc-linux64.tar.xz" \
+       | tar -Jx -C /opt; then
+    echo 'export PATH=/opt/ia16-elf-gcc/bin:$PATH' > /etc/profile.d/ia16.sh
+    export PATH=/opt/ia16-elf-gcc/bin:$PATH
+  else
+    echo "ia16-elf-gcc install failed" >> "$FAIL_LOG"
+  fi
+else
+  echo "ia16-elf-gcc version fetch failed" >> "$FAIL_LOG"
+fi
 
 #— protoc installer (pinned)
 PROTO_VERSION=25.1
-curl -fsSL "https://raw.githubusercontent.com/protocolbuffers/protobuf/v${PROTO_VERSION}/protoc-${PROTO_VERSION}-linux-x86_64.zip" \
-  -o /tmp/protoc.zip
-unzip -d /usr/local /tmp/protoc.zip
-rm /tmp/protoc.zip
+if curl -fsSL "https://raw.githubusercontent.com/protocolbuffers/protobuf/v${PROTO_VERSION}/protoc-${PROTO_VERSION}-linux-x86_64.zip" \
+  -o /tmp/protoc.zip && unzip -d /usr/local /tmp/protoc.zip; then
+  rm /tmp/protoc.zip
+else
+  echo "protoc install failed" >> "$FAIL_LOG"
+fi
 
 #— gmake alias
 command -v gmake >/dev/null 2>&1 || ln -s "$(command -v make)" /usr/local/bin/gmake
@@ -156,5 +185,10 @@ command -v gmake >/dev/null 2>&1 || ln -s "$(command -v make)" /usr/local/bin/gm
 #— clean up
 apt-get clean
 rm -rf /var/lib/apt/lists/*
+
+if [ -s "$FAIL_LOG" ]; then
+  echo "The following packages failed to install:" >&2
+  cat "$FAIL_LOG" >&2
+fi
 
 exit 0
