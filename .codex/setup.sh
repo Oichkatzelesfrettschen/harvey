@@ -35,6 +35,20 @@ for pkg in \
   apt_pin_install "$pkg"
 done
 
+# ensure pre-commit is available
+if ! command -v pre-commit >/dev/null 2>&1; then
+  pip3 install --no-cache-dir pre-commit
+fi
+
+# ensure yacc command exists
+if ! command -v yacc >/dev/null 2>&1; then
+  if command -v byacc >/dev/null 2>&1; then
+    ln -s "$(command -v byacc)" /usr/local/bin/yacc
+  elif command -v bison >/dev/null 2>&1; then
+    ln -s "$(command -v bison)" /usr/local/bin/yacc
+  fi
+fi
+
 #— Python & deep-learning / MLOps
 for pkg in \
   python3 python3-pip python3-dev python3-venv python3-wheel \
