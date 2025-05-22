@@ -9,7 +9,7 @@ static void usage(void) {
 }
 
 CmdArgs parse_args(int argc, char **argv) {
-    CmdArgs args = {0};
+    CmdArgs args = {.verbose = false, .device = NULL};
     for (int i = 1; i < argc; ++i) {
         if (strcmp(argv[i], "-v") == 0) {
             args.verbose = true;
