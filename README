@@ -33,3 +33,20 @@ respective parties (such as Bigelow & Holmes Inc.) and were included
 in Plan 9 by permission; those copyrights are unaffected by the
 transfer to Plan 9 Foundation and remain in effect per the terms found
 in this distribution.
+
+## Development Setup
+
+Use `setup.sh` to install the packages required for building Harvey on a
+Debian-based system:
+
+```bash
+sudo ./setup.sh
+```
+
+After dependencies are installed, enable pre-commit hooks to keep the
+repository consistent:
+
+```bash
+pre-commit install
+```
+
