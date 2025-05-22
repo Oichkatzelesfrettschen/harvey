@@ -1,13 +1,14 @@
-CC_32 = gcc -m32 -std=c23 -Wall -Wextra -pedantic
-CC_64 = gcc -m64 -std=c23 -Wall -Wextra -pedantic
+CC_32 = gcc -m32 -std=c2x -Wall -Wextra -pedantic
+CC_64 = gcc -m64 -std=c2x -Wall -Wextra -pedantic
+SRC = acd_c23.c args.c
 
 all: acd32 acd64
 
-acd32: acd_c23.c
-$(CC_32) $< -o $@
+acd32: $(SRC)
+	$(CC_32) $(SRC) -o $@
 
-acd64: acd_c23.c
-$(CC_64) $< -o $@
+acd64: $(SRC)
+	$(CC_64) $(SRC) -o $@
 
 clean:
-rm -f acd32 acd64
+	rm -f acd32 acd64

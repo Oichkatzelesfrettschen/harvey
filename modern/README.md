@@ -5,6 +5,11 @@ Harvey OS utilities into standard C23. The goal is to eventually build
 portable versions that target both 32‑bit and 64‑bit x86 systems without
 relying on the original Plan 9 libraries.
 
-Currently the implementation only provides a small skeleton for the
-`acd` CD‑player tool. The code is not feature complete and serves merely as a
-starting point for future modernization efforts.
+The first utility under modernization is `acd`. The code has been split into
+small modules to ease future development:
+
+* `msf.h` – helper for dealing with CD minute/second/frame values.
+* `args.c`/`args.h` – minimal command line parsing.
+* `acd_c23.c` – main entry point demonstrating the modernized skeleton.
+
+Run `make` in this directory to build both 32‑bit and 64‑bit binaries.
