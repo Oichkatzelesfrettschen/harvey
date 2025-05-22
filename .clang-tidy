@@ -1,0 +1,15 @@
+---
+Checks: '-*'
+  ,clang-analyzer-* 
+  ,modernize-* 
+  ,performance-* 
+  ,readability-* 
+  ,bugprone-* 
+WarningsAsErrors: ''
+HeaderFilterRegex: '.*'
+AnalyzeTemporaryDtors: false
+FormatStyle: file
+ExtraArgs:
+  - -std=c23
+  - -std=c++17
+...
