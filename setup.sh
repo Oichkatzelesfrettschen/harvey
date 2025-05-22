@@ -44,6 +44,10 @@ for pkg in \
   apt_pin_install "$pkg"
 done
 
+# Python testing, linting, and fuzzing tools
+pip3 install --no-cache-dir \
+  pytest pytest-cov coverage pylint flake8 black mypy hypothesis
+
 pip3 install --no-cache-dir \
   tensorflow-cpu jax jaxlib \
   tensorflow-model-optimization mlflow onnxruntime-tools
@@ -94,6 +98,14 @@ for pkg in \
   fpc lazarus zig nim nimble crystal shards gforth; do
   apt_pin_install "$pkg"
 done
+
+# Go tooling for testing, debugging, fuzzing, and linting
+go install github.com/go-delve/delve/cmd/dlv@latest
+go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+go install github.com/google/gofuzz@latest
+GOBIN=$(go env GOPATH)/bin
+echo "export PATH=$GOBIN:\$PATH" > /etc/profile.d/golang.sh
+export PATH=$GOBIN:$PATH
 
 # GUI & desktop-dev frameworks
 for pkg in \
