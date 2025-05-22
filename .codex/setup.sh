@@ -52,8 +52,11 @@ pip3 install --no-cache-dir \
 #— QEMU emulation for foreign binaries
 for pkg in \
   qemu-user-static \
-  qemu-system-x86 qemu-system-arm qemu-system-aarch64 \
-  qemu-system-riscv64 qemu-system-ppc qemu-system-ppc64 qemu-utils; do
+  qemu-system-x86 qemu-system-x86-64 qemu-system-i386 \
+  qemu-system-arm qemu-system-aarch64 \
+  qemu-system-riscv64 qemu-system-mips qemu-system-mipsel \
+  qemu-system-ppc qemu-system-ppc64 qemu-system-s390x \
+  qemu-system-sparc qemu-utils; do
   apt_pin_install "$pkg"
 done
 
