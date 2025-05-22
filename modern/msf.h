@@ -10,6 +10,8 @@ typedef struct {
     int f;
 } Msf;
 
+_Static_assert(sizeof(int) == 4, "int is not 32-bit");
+
 static inline Msf msf_from_frames(uint32_t frames) {
     Msf msf;
     msf.m = frames / (60 * 75);
