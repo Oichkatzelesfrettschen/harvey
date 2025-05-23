@@ -41,7 +41,7 @@ fi
 #— core build tools, formatters, analysis, science libs
 for pkg in \
   build-essential gcc g++ clang lld llvm \
-  clang-format uncrustify astyle editorconfig pre-commit \
+  clang-tidy clang-format uncrustify astyle editorconfig pre-commit \
   make bmake ninja-build cmake meson \
   autoconf automake libtool m4 gawk flex bison byacc \
   pkg-config file ca-certificates curl git unzip \
@@ -74,6 +74,7 @@ for pkg in \
   python3-numpy python3-scipy python3-pandas \
   python3-matplotlib python3-scikit-learn \
   python3-torch python3-torchvision python3-torchaudio \
+  python3-yaml \
   python3-onnx python3-onnxruntime; do
   apt_pin_install "$pkg"
 done
@@ -181,6 +182,13 @@ fi
 
 #— gmake alias
 command -v gmake >/dev/null 2>&1 || ln -s "$(command -v make)" /usr/local/bin/gmake
+
+# install git pre-commit hooks if pre-commit is available
+if command -v pre-commit >/dev/null 2>&1; then
+  if ! pre-commit install --install-hooks; then
+    echo "pre-commit install failed" >> "$FAIL_LOG"
+  fi
+fi
 
 #— clean up
 apt-get clean
