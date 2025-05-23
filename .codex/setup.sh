@@ -59,6 +59,15 @@ if ! command -v pre-commit >/dev/null 2>&1; then
   fi
 fi
 
+# ensure additional python tools are available via pip
+for pkg in pre-commit configuredb pytest pyyaml pylint pyfuzz; do
+  if ! pip3 show "$pkg" >/dev/null 2>&1; then
+    if ! pip3 install --no-cache-dir "$pkg"; then
+      echo "pip3 install $pkg failed" >> "$FAIL_LOG"
+    fi
+  fi
+done
+
 # ensure yacc command exists
 if ! command -v yacc >/dev/null 2>&1; then
   if command -v byacc >/dev/null 2>&1; then
