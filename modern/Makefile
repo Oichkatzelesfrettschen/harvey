@@ -1,6 +1,6 @@
 CC = clang
-CFLAGS += -std=c23 -Wall -Wextra -Wpedantic -Werror
-SRC = acd_c23.c args.c
+CFLAGS += -std=c23 -Wall -Wextra -Wpedantic -Werror -pthread
+SRC = acd_c23.c args.c spinlock.c
 
 all: acd
 
