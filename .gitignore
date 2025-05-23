@@ -30,3 +30,6 @@ sys/lib/dist/pc/multi
 sys/lib/firmware
 sys/go
 *.acid
+
+# build output
+modern/acd

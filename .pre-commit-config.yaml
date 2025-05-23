@@ -1,8 +1,27 @@
 repos:
-  - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.5.0
+  - repo: local
     hooks:
       - id: trailing-whitespace
+        name: trailing-whitespace
+        entry: hooks/trailing_whitespace.py
+        language: python
+        types: [text]
       - id: end-of-file-fixer
+        name: end-of-file-fixer
+        entry: hooks/end_of_file_fixer.py
+        language: python
+        types: [text]
       - id: check-yaml
+        name: check-yaml
+        entry: hooks/check_yaml.py
+        language: python
+        files: \.(yaml|yml)$
       - id: check-added-large-files
+        name: check-added-large-files
+        entry: hooks/check_added_large_files.py
+        language: python
+      - id: clang-tidy
+        name: clang-tidy
+        entry: hooks/clang_tidy.sh
+        language: script
+        files: \.(c|h)$
