@@ -6,7 +6,8 @@
 
 int main(int argc, char **argv) {
     CmdArgs args = parse_args(argc, argv);
-    printf("C23 acd skeleton running on device %s. Verbose=%d\n", args.device, args.verbose);
+    printf("C23 acd skeleton running on device %s. Verbose=%d\n", args.device,
+           (int)args.verbose);
 
     /* Example use of the recursive spinlock. */
     Spinlock lock;
