@@ -19,7 +19,8 @@ CmdArgs parse_args(int argc, char **argv) {
             usage();
         }
     }
-    if (!args.device)
+    if (!args.device) {
         usage();
+    }
     return args;
 }
