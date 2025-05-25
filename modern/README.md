@@ -12,4 +12,6 @@ small modules to ease future development:
 * `args.c`/`args.h` – minimal command line parsing.
 * `acd_c23.c` – main entry point demonstrating the modernized skeleton.
 
-Run `make` in this directory to build both 32‑bit and 64‑bit binaries.
+Run `make` in this directory to build for the host architecture. Pass
+`ARCH=<target>` to select another architecture or run `make test` to
+compile all targets listed in `ARCHS`.
