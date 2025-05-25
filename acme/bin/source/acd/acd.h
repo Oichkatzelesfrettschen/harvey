@@ -1,3 +1,6 @@
+#ifdef USE_POSIX_THREADS
+#include "../../../../modern/plan9_compat.h"
+#else
 #include <9p.h>
 #include <auth.h>
 #include <bio.h>
@@ -6,6 +9,7 @@
 #include <libc.h>
 #include <thread.h>
 #include <u.h>
+#endif
 
 /* acme */
 typedef struct Event Event;
