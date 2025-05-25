@@ -1,9 +1,10 @@
 # Harvey Build Instructions
 
 This repository contains a small subset of the Harvey OS utilities.
-The `.codex/setup.sh` script installs toolchains and QEMU packages
-required for cross development. After the dependencies are installed
-run `make` to build the utilities under the `modern` directory.
+The `.codex/setup.sh` script automatically installs the toolchains,
+QEMU and the Bochs emulator along with other packages required for
+cross development. After the dependencies are installed run `make`
+to build the utilities under the `modern` directory.
 
 Before committing changes, run `pre-commit` to execute formatters and
 `clang-tidy` checks. The `.codex/setup.sh` script installs the required

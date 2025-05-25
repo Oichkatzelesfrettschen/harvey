@@ -21,6 +21,14 @@ REQUIRED_PACKAGES=(
   python3-pip
 )
 
+# Emulator packages for Harvey
+REQUIRED_PACKAGES+=(
+  qemu
+  qemu-system-x86
+  qemu-utils
+  bochs
+)
+
 if ! apt-get install -y "${REQUIRED_PACKAGES[@]}"; then
   echo "apt-get install failed" >> "$FAIL_LOG"
 fi
