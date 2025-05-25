@@ -8,9 +8,9 @@ static void usage(void) {
     exit(EXIT_FAILURE);
 }
 
-CmdArgs parse_args(int argc, char **argv) {
+CmdArgs parse_args(int32_t argc, char **argv) {
     CmdArgs args = {.verbose = false, .device = NULL};
-    for (int i = 1; i < argc; ++i) {
+    for (int32_t i = 1; i < argc; ++i) {
         if (strcmp(argv[i], "-v") == 0) {
             args.verbose = true;
         } else if (!args.device) {

@@ -2,10 +2,11 @@
 #include "msf.h"
 #include "spinlock.h"
 #include <stdbool.h>
+#include <stdint.h>
 #include <stdio.h>
 
 int main(int argc, char **argv) {
-    CmdArgs args = parse_args(argc, argv);
+    CmdArgs args = parse_args((int32_t)argc, argv);
     printf("C23 acd skeleton running on device %s. Verbose=%d\n", args.device,
            (int)args.verbose);
 
