@@ -15,10 +15,14 @@ REQUIRED_PACKAGES=(
   clang
   clang-tidy
   clang-format
+  cmake
   make
   git
   python3
   python3-pip
+  qemu
+  qemu-system-x86
+  qemu-utils
 )
 
 if ! apt-get install -y "${REQUIRED_PACKAGES[@]}"; then

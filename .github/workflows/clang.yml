@@ -11,5 +11,6 @@ jobs:
         with:
           style: file
           path: "**/*.{c,h}"
-      - run: make all CFLAGS+=' -std=c23 -Wall -Wextra -Wpedantic -Werror'
+      - run: cmake -S . -B build -DCMAKE_C_STANDARD=23
+      - run: cmake --build build
       - run: clang-tidy --config-file=clang-tidy.config $(find . -name '*.c' -o -name '*.h') -- -std=c23

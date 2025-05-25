@@ -12,4 +12,9 @@ small modules to ease future development:
 * `args.c`/`args.h` – minimal command line parsing.
 * `acd_c23.c` – main entry point demonstrating the modernized skeleton.
 
-Run `make` in this directory to build both 32‑bit and 64‑bit binaries.
+Run the root CMake build to compile the `acd` utility:
+
+```bash
+cmake -S .. -B ../build
+cmake --build ../build --target acd
+```
