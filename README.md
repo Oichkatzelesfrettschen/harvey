@@ -20,3 +20,17 @@ To boot a custom Harvey kernel without a graphical console you can use
 The script invokes `qemu-system-x86_64` with the `-nographic` flag so
 that the virtual machine is accessible through the terminal. Append any
 additional QEMU arguments after the kernel path if needed.
+
+## Cross Compilation
+
+The Makefiles can produce binaries for multiple architectures. Select a
+target by passing the `ARCH` variable to `make`:
+
+```bash
+make ARCH=i386     # build 32-bit binaries
+make ARCH=x86_64   # build 64-bit binaries
+make ARCH=i8086    # experimental 16-bit build
+```
+
+Use `make test` to compile all entries defined in the `ARCHS` variable
+(defaults to `i386 x86_64`).
