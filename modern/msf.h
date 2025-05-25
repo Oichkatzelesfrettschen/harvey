@@ -3,14 +3,14 @@
 
 #include <stdint.h>
 
-/* Minute, second, frame structure from original acd code */
+/* Minute, second, frame structure from original acd code.
+ * Fields use explicit 32-bit types for portability. */
 typedef struct {
-    int m;
-    int s;
-    int f;
+    int32_t m;
+    int32_t s;
+    int32_t f;
 } Msf;
 
-_Static_assert(sizeof(int) == 4, "int is not 32-bit");
 
 enum {
     MSF_SECS_PER_MIN = 60,
@@ -19,10 +19,10 @@ enum {
 
 static inline Msf msf_from_frames(uint32_t frames) {
     Msf msf;
-    msf.m = (int)(frames / (MSF_SECS_PER_MIN * MSF_FRAMES_PER_SEC));
+    msf.m = (int32_t)(frames / (MSF_SECS_PER_MIN * MSF_FRAMES_PER_SEC));
     frames %= MSF_SECS_PER_MIN * MSF_FRAMES_PER_SEC;
-    msf.s = (int)(frames / MSF_FRAMES_PER_SEC);
-    msf.f = (int)(frames % MSF_FRAMES_PER_SEC);
+    msf.s = (int32_t)(frames / MSF_FRAMES_PER_SEC);
+    msf.f = (int32_t)(frames % MSF_FRAMES_PER_SEC);
     return msf;
 }
 

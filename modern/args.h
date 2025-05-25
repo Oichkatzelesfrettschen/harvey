@@ -2,14 +2,16 @@
 #define HARVEY_ARGS_H
 
 #include <stdbool.h>
+#include <stdint.h>
 
 typedef struct {
     bool verbose;
     const char *device;
 } CmdArgs;
 
-_Static_assert(sizeof(int) == 4, "int is not 32-bit");
+/* Use explicit 32-bit type rather than assuming sizeof(int) == 4. */
 
-CmdArgs parse_args(int argc, char **argv);
+
+CmdArgs parse_args(int32_t argc, char **argv);
 
 #endif /* HARVEY_ARGS_H */
