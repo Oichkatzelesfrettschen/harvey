@@ -1,13 +1,50 @@
 #!/usr/bin/env bash
+# A living setup script used by Codex to install dependencies. It attempts to
+# install packages via apt, then falls back to pip and npm if needed. Any
+# failures are logged but the script continues.
 set -euo pipefail
+set -x
+
 export DEBIAN_FRONTEND=noninteractive
 
+LOG_FILE=/tmp/setup.log
 FAIL_LOG=/tmp/setup_failures.log
-touch "$FAIL_LOG"
+touch "$LOG_FILE" "$FAIL_LOG"
+
+exec > >(tee -a "$LOG_FILE") 2>&1
 
 if ! apt-get update -y; then
   echo "apt-get update failed" >> "$FAIL_LOG"
 fi
+
+if ! apt-get dist-upgrade -y; then
+  echo "apt-get dist-upgrade failed" >> "$FAIL_LOG"
+fi
+
+install_pkg() {
+  local pkg="$1"
+  if ! apt-get install -y "$pkg"; then
+    echo "apt-get install $pkg failed" >> "$FAIL_LOG"
+    if ! pip3 install --no-cache-dir "$pkg"; then
+      echo "pip3 install $pkg failed" >> "$FAIL_LOG"
+      if ! npm install -g "$pkg"; then
+        echo "npm install $pkg failed" >> "$FAIL_LOG"
+        case "$pkg" in
+          capnproto)
+            if command -v wget >/dev/null 2>&1; then
+              wget -q https://capnproto.org/capnproto-c++-0.9.1.tar.gz -O /tmp/capnproto.tar.gz && \
+                tar -xzf /tmp/capnproto.tar.gz -C /tmp && \
+                cd /tmp/capnproto-c++-0.9.1 && \
+                ./configure && make -j"$(nproc)" && make install
+            else
+              echo "wget not found for capnproto" >> "$FAIL_LOG"
+            fi
+            ;;
+        esac
+      fi
+    fi
+  fi
+}
 
 # Minimal packages required to build this repository
 REQUIRED_PACKAGES=(
@@ -19,6 +56,14 @@ REQUIRED_PACKAGES=(
   git
   python3
   python3-pip
+  shellcheck
+  graphviz
+  doxygen
+  llvm
+  lld
+  coq
+  isabelle
+  capnproto
 )
 
 # Emulator packages for Harvey
@@ -29,9 +74,9 @@ REQUIRED_PACKAGES+=(
   bochs
 )
 
-if ! apt-get install -y "${REQUIRED_PACKAGES[@]}"; then
-  echo "apt-get install failed" >> "$FAIL_LOG"
-fi
+for pkg in "${REQUIRED_PACKAGES[@]}"; do
+  install_pkg "$pkg"
+done
 
 # Install pre-commit via pip
 if ! pip3 install --no-cache-dir pre-commit; then
