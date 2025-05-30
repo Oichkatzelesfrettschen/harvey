@@ -1,3 +1,4 @@
+/* Recursive spinlock implementation using C11 atomics. */
 #include "spinlock.h"
 #include <assert.h>
 

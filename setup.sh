@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# A living setup script used by Codex to install dependencies. It attempts to
+# Root environment setup script used to install all dependencies.
+# It attempts to
 # install packages via apt, then falls back to pip and npm if needed. Any
 # failures are logged but the script continues.
 set -euo pipefail
@@ -56,6 +57,7 @@ REQUIRED_PACKAGES=(
   git
   python3
   python3-pip
+  python3-yaml
   shellcheck
   graphviz
   doxygen
@@ -64,6 +66,12 @@ REQUIRED_PACKAGES=(
   coq
   isabelle
   capnproto
+  gcc-multilib
+  g++-multilib
+  rc
+  expect
+  go-dep
+  golang-go
 )
 
 # Emulator packages for Harvey
@@ -81,6 +89,11 @@ done
 # Install pre-commit via pip
 if ! pip3 install --no-cache-dir pre-commit; then
   echo "pip3 install pre-commit failed" >> "$FAIL_LOG"
+fi
+
+# Install PyYAML for Python hooks
+if ! pip3 install --no-cache-dir pyyaml; then
+  echo "pip3 install pyyaml failed" >> "$FAIL_LOG"
 fi
 
 # Install git pre-commit hooks

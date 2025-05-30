@@ -11,5 +11,7 @@ jobs:
         with:
           style: file
           path: "**/*.{c,h}"
-      - run: make all CFLAGS+=' -std=c23 -Wall -Wextra -Wpedantic -Werror'
-      - run: clang-tidy --config-file=clang-tidy.config $(find . -name '*.c' -o -name '*.h') -- -std=c23
+      - name: Install dependencies
+        run: ./setup.sh
+      - run: make all CFLAGS+=' -std=c17 -Wall -Wextra -Wpedantic -Werror'
+      - run: clang-tidy --config-file=clang-tidy.config $(find . -name '*.c' -o -name '*.h') -- -std=c17

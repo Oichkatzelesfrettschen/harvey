@@ -1,3 +1,4 @@
+/* Simple argument parser for the acd utility. */
 #include "args.h"
 #include <stdio.h>
 #include <stdlib.h>
