@@ -8,11 +8,11 @@ void tocthread(void *v) {
 
     threadsetname("tocthread");
     d = v;
-    DPRINT(2, "recv ctocdisp?...");
+    LOG(2, "recv ctocdisp?...");
     while (recv(d->ctocdisp, &thetoc) == 1) {
-        DPRINT(2, "recv ctocdisp!...");
+        LOG(2, "recv ctocdisp!...");
         drawtoc(d->w, &thetoc);
-        DPRINT(2, "send dbreq...\n");
+        LOG(2, "send dbreq...\n");
         send(d->ctocdbreq, &thetoc);
     }
 }

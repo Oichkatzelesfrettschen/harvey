@@ -160,7 +160,7 @@ Again:
     if (t->ntrack > MTRACK)
         t->ntrack = MTRACK;
 
-    DPRINT(2, "%d %d\n", resp[3], resp[2]);
+    LOG(2, "%d %d\n", resp[3], resp[2]);
     t->ntrack = resp[3] - resp[2] + 1;
     t->track0 = resp[2];
 
@@ -277,21 +277,21 @@ void cdstatusproc(void *v) {
 
     threadsetname("cdstatusproc");
     d = v;
-    DPRINT(2, "cdstatus %d\n", getpid());
+    LOG(2, "cdstatus %d\n", getpid());
     for (;;) {
         ping(d);
-        // DPRINT(2, "d %d %d t %d %d\n", d->scsi->changetime, d->scsi->nchange, t.changetime,
+        // LOG(2, "d %d %d t %d %d\n", d->scsi->changetime, d->scsi->nchange, t.changetime,
         // t.nchange);
         if (playstatus(d, &s) == 0)
             send(d->cstatus, &s);
         if (d->scsi->changetime != t.changetime || d->scsi->nchange != t.nchange) {
             if (gettoc(d->scsi, &t) == 0) {
-                DPRINT(2, "sendtoc...\n");
+                LOG(2, "sendtoc...\n");
                 if (debug)
                     dumptoc(&t);
                 send(d->ctocdisp, &t);
             } else
-                DPRINT(2, "error: %r\n");
+                LOG(2, "error: %r\n");
         }
         sleep(1000);
     }
