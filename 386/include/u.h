@@ -22,7 +22,7 @@ typedef long jmp_buf[2];
 #define JMPBUFSP 0
 #define JMPBUFPC 1
 #define JMPBUFDPC 0
-typedef unsigned int mpdigit; /* for /sys/include/mp.h */
+typedef unsigned int mpdigit; /* for mp.h */
 typedef uint8_t u8int;
 typedef uint16_t u16int;
 typedef uint32_t u32int;

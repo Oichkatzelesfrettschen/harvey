@@ -5,6 +5,7 @@ This document outlines the high level tasks required to refactor the Harvey util
 ## C17 Migration
 
 - Audit existing C sources for deprecated constructs and Plan 9 specific extensions.
+- Use `scripts/analyze_repo.py` to track remaining Plan9 constructs in the `acd` sources.
 - Introduce a portable build system using clang with `-std=c17`.
 - Enable compiler warnings for portability issues and adopt clang-tidy modernize checks.
 
