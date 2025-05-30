@@ -54,15 +54,9 @@ void *recvp(Channel *);
 int chan_try_send(Channel *, void *);
 int chan_try_recv(Channel *, void *);
 
-/* Simple stand-ins for historical Plan9 types. */
-typedef unsigned long ulong;
-typedef uint32_t uint;
-/* Simple stand-ins for historical Plan9 types.
- * These aliases mirror the common Plan 9 names while
- * using explicit C99 fixed-width types for clarity.
- */
-typedef unsigned long ulong; /* native unsigned long */
-typedef uint32_t uint;       /* 32-bit unsigned integer */
+/* Plan 9 type aliases using explicit C17 integer sizes. */
+typedef uint32_t ulong; /* 32-bit unsigned long */
+typedef uint32_t uint;  /* 32-bit unsigned integer */
 
 /* acme */
 typedef struct Fmt Fmt; /* Formatting context placeholder */
@@ -208,15 +202,13 @@ int cdstatusproc(void *); /* Drive* */
 /* Global debug level controlling verbosity of diagnostic output. */
 extern int debug;
 
-#define DPRINT                                                                                     \
-    if (debug)                                                                                     \
-        fprintf(stderr,
 /* Debug logging helper with a verbosity level. */
 #define LOG(level, ...)                                                                            \
     do {                                                                                           \
         if (debug >= (level))                                                                      \
             fprintf(stderr, __VA_ARGS__);                                                          \
     } while (0)
+
 void acmeevent(Drive *, Window *, Event *);
 
 int playtrack(Drive *, int, int);

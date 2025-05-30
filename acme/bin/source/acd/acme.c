@@ -63,7 +63,7 @@ int setplaytime(Window *w, char *new) {
 
     q1--; /* > */
     snprintf(buf, sizeof(buf), "#%lud,#%lud", q0, q1);
-    DPRINT(2, "setaddr %s\n", buf);
+    LOG(2, "setaddr %s\n", buf);
     if (!winsetaddr(w, buf, 1))
         return 0;
 
@@ -111,7 +111,7 @@ int markplay(Window *w, ulong q0) {
         w->data = winopenfile(w, "data");
 
     snprintf(buf, sizeof(buf), "#%lud", q0);
-    DPRINT(2, "addr %s\n", buf);
+    LOG(2, "addr %s\n", buf);
     sprint(buf, "#%lud", q0);
     LOG(2, "addr %s\n", buf);
     if (!winsetaddr(w, buf, 1) || !winsetaddr(w, "-0", 1))
