@@ -89,15 +89,15 @@ static int cddbfilltoc(Toc *t) {
         goto died;
 
     fprintf(bin, "cddb query %8.8lux %d", diskid(t), t->ntrack);
-    DPRINT(2, "cddb query %8.8lux %d", diskid(t), t->ntrack);
+    LOG(2, "cddb query %8.8lux %d", diskid(t), t->ntrack);
     for (i = 0; i < t->ntrack; i++) {
         m = &t->track[i].start;
         fprintf(bin, " %d", (m->m * 60 + m->s) * 75 + m->f);
-        DPRINT(2, " %d", (m->m * 60 + m->s) * 75 + m->f);
+        LOG(2, " %d", (m->m * 60 + m->s) * 75 + m->f);
     }
     m = &t->track[t->ntrack - 1].end;
     fprintf(bin, " %d\r\n", m->m * 60 + m->s);
-    DPRINT(2, " %d\r\n", m->m * 60 + m->s);
+    LOG(2, " %d\r\n", m->m * 60 + m->s);
     fprint(fd, "cddb query %8.8lux %d", diskid(t), t->ntrack);
     LOG(2, "cddb query %8.8lux %d", diskid(t), t->ntrack);
     for (i = 0; i < t->ntrack; i++) {
@@ -113,8 +113,8 @@ static int cddbfilltoc(Toc *t) {
     if (fgets(line, sizeof(line), bin) == NULL || atoi(line) / 100 != 2)
         goto died;
     line[strcspn(line, "\n")] = '\0';
-    DPRINT(2, "cddb: %s\n", line);
-    nf = tokenize(line, f, nelem(f));
+    LOG(2, "cddb: %s\n", line);
+    nf = tokenize(line, f, (int)(sizeof(f) / sizeof(f[0])));
     p[Blinelen(&bin) - 1] = 0;
     LOG(2, "cddb: %s\n", p);
     nf = tokenize(p, f, (int)(sizeof(f) / sizeof(f[0])));
@@ -136,7 +136,7 @@ static int cddbfilltoc(Toc *t) {
         line[strcspn(line, "\n")] = '\0';
 
         /* accept first match */
-        nf = tokenize(line, f, nelem(f));
+        nf = tokenize(line, f, (int)(sizeof(f) / sizeof(f[0])));
         nf = tokenize(p, f, (int)(sizeof(f) / sizeof(f[0])));
         if (nf < 2)
             goto died;
@@ -148,7 +148,7 @@ static int cddbfilltoc(Toc *t) {
             if (fgets(line, sizeof(line), bin) == NULL)
                 goto died;
             line[strcspn(line, "\n")] = '\0';
-            DPRINT(2, "cddb: %s\n", line);
+            LOG(2, "cddb: %s\n", line);
             p[Blinelen(&bin) - 1] = '\0';
             LOG(2, "cddb: %s\n", p);
         }
@@ -170,46 +170,48 @@ static int cddbfilltoc(Toc *t) {
         q = line + strlen(line) - 1;
         while (isspace((unsigned char)*q))
             *q-- = 0;
-        DPRINT(2, "cddb %s\n", line);
+        LOG(2, "cddb %s\n", line);
         if (strncmp(line, "DTITLE=", 7) == 0) {
-        LOG(2, "cddb %s\n", p);
-        if (strncmp(p, "DTITLE=", 7) == 0) {
-            if (gottitle)
-                append(&t->title, line + 7);
-            else
-                t->title = estrdup(line + 7);
-            gottitle = 1;
-        } else if (strncmp(line, "TTITLE", 6) == 0 && isdigit(line[6])) {
-            i = atoi(line + 6);
-            if (i < t->ntrack) {
-                p = line + 6;
-                while (isdigit((unsigned char)*p))
-                    p++;
-                if (*p == '=')
-                    p++;
-
-                if (gottrack[i])
-                    append(&t->track[i].title, p);
+            LOG(2, "cddb %s\n", p);
+            if (strncmp(p, "DTITLE=", 7) == 0) {
+                if (gottitle)
+                    append(&t->title, line + 7);
                 else
-                    t->track[i].title = estrdup(p);
-                gottrack[i] = 1;
+                    t->title = estrdup(line + 7);
+                gottitle = 1;
+            } else if (strncmp(line, "TTITLE", 6) == 0 && isdigit(line[6])) {
+                i = atoi(line + 6);
+                if (i < t->ntrack) {
+                    p = line + 6;
+                    while (isdigit((unsigned char)*p))
+                        p++;
+                    if (*p == '=')
+                        p++;
+
+                    if (gottrack[i])
+                        append(&t->track[i].title, p);
+                    else
+                        t->track[i].title = estrdup(p);
+                    gottrack[i] = 1;
+                }
             }
         }
-    } while (*line != '.');
+        while (*line != '.')
+            ;
 
-    fprintf(bin, "quit\r\n");
-    fclose(bin);
+        fprintf(bin, "quit\r\n");
+        fclose(bin);
 
-    return 0;
-}
+        return 0;
+    }
 
-int cddbproc(void *v) {
-    Drive *d;
-    Toc t;
+    int cddbproc(void *v) {
+        Drive *d;
+        Toc t;
 
-    d = v;
-    while (recv(d->cdbreq, &t))
-        if (cddbfilltoc(&t) == 0)
-            send(d->cdbreply, &t);
-    return 0;
-}
+        d = v;
+        while (recv(d->cdbreq, &t))
+            if (cddbfilltoc(&t) == 0)
+                send(d->cdbreply, &t);
+        return 0;
+    }
