@@ -7,7 +7,7 @@ int debug;
 
 /* Print usage information and exit. */
 void usage(void) {
-    fprint(2, "usage: acd dev\n");
+    fprintf(stderr, "usage: acd dev\n");
     threadexitsall("usage");
 }
 
@@ -61,6 +61,8 @@ void eventwatcher(Drive *d) {
                 s.state = Sunknown;
                 advancetrack(d, w);
             }
+            // DPRINT(2, "status %d %d %d %M %M\n", s.state, s.track, s.index, s.abs, s.rel);
+            snprintf(buf, sizeof(buf), "%d:%2.2d", s.rel.m, s.rel.s);
             // LOG(2, "status %d %d %d %M %M\n", s.state, s.track, s.index, s.abs, s.rel);
             sprint(buf, "%d:%2.2d", s.rel.m, s.rel.s);
             setplaytime(w, buf);

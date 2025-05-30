@@ -12,7 +12,6 @@
 #include <threads.h>
 
 /* Forward declarations for Plan9 types that the old code relied on. */
-typedef struct Biobuf Biobuf;
 typedef struct Channel Channel;
 typedef struct Scsi Scsi;
 
@@ -96,7 +95,7 @@ struct Window {
     int event;
     int addr;
     int data;
-    Biobuf *body;
+    FILE *body; /* buffered body file */
 
     /* event input */
     char buf[512];
@@ -209,6 +208,9 @@ int cdstatusproc(void *); /* Drive* */
 /* Global debug level controlling verbosity of diagnostic output. */
 extern int debug;
 
+#define DPRINT                                                                                     \
+    if (debug)                                                                                     \
+        fprintf(stderr,
 /* Debug logging helper with a verbosity level. */
 #define LOG(level, ...)                                                                            \
     do {                                                                                           \

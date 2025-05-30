@@ -1,5 +1,7 @@
 #include "acd.h"
+#include <errno.h>
 #include <stdint.h>
+#include <stdio.h>
 
 /*
  * Format an Msf structure as M.S.F for use with Fmt printing routines.
@@ -147,7 +149,7 @@ Again:
 
     if (s->changetime == 0) {
         t->ntrack = 0;
-        werrstr("no media");
+        fprintf(stderr, "no media\n");
         return -1;
     }
 
@@ -166,7 +168,7 @@ Again:
 
     n = ((resp[0] << 8) | resp[1]) + 2;
     if (n < 4 + 8 * (t->ntrack + 1)) {
-        werrstr("bad read0 %d %d", n, 4 + 8 * (t->ntrack + 1));
+        fprintf(stderr, "bad read0 %d %d: %s\n", n, 4 + 8 * (t->ntrack + 1), strerror(errno));
         return -1;
     }
 
@@ -184,13 +186,13 @@ Again:
         return -1;
 
     if (s->changetime != t->changetime || s->nchange != t->nchange) {
-        fprint(2, "disk changed underfoot; repeating\n");
+        fprintf(stderr, "disk changed underfoot; repeating\n");
         goto Again;
     }
 
     n = ((resp[0] << 8) | resp[1]) + 2;
     if (n < 4 + 8 * (t->ntrack + 1)) {
-        werrstr("bad read");
+        fprintf(stderr, "bad read: %s\n", strerror(errno));
         return -1;
     }
 
@@ -207,7 +209,7 @@ Again:
 static void dumptoc(Toc *t) {
     int i;
 
-    fprint(1, "%d tracks\n", t->ntrack);
+    fprintf(stdout, "%d tracks\n", t->ntrack);
     for (i = 0; i < t->ntrack; i++)
         print("%d. %M-%M (%lud-%lud)\n", i + 1, t->track[i].start, t->track[i].end,
               t->track[i].bstart, t->track[i].bend);
