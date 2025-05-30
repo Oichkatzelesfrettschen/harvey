@@ -29,3 +29,19 @@ static inline Msf msf_from_frames(uint32_t frames) {
     msf.f = (int32_t)(frames % MSF_FRAMES_PER_SEC);
     return msf;
 }
+
+/*
+ * Convert an Msf structure back to an absolute frame count. Useful when
+ * interacting with low level CD commands which operate on frame numbers.
+ */
+static inline uint32_t msf_to_frames(Msf msf) {
+    /* Convert minutes to frames. */
+    uint32_t from_minutes = (uint32_t)(msf.m * MSF_SECS_PER_MIN * MSF_FRAMES_PER_SEC);
+    /* Convert seconds to frames. */
+    uint32_t from_seconds = (uint32_t)(msf.s * MSF_FRAMES_PER_SEC);
+    /* Frames are already stored in the structure. */
+    uint32_t from_frames = (uint32_t)msf.f;
+
+    /* Sum all contributions for the total frame count. */
+    return from_minutes + from_seconds + from_frames;
+}

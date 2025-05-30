@@ -8,6 +8,7 @@ This document outlines the high level tasks required to refactor the Harvey util
 - Use `scripts/analyze_repo.py` to track remaining Plan9 constructs in the `acd` sources.
 - Introduce a portable build system using clang with `-std=c17`.
 - Enable compiler warnings for portability issues and adopt clang-tidy modernize checks.
+- See `c17-roadmap.md` for a detailed staged approach.
 
 ## C++17 Components
 
