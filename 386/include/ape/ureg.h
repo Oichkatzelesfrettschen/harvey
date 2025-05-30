@@ -2,6 +2,10 @@
 #pragma once
 #include <stdint.h>
 
+/*
+ * CPU register snapshot saved on entry to an interrupt or trap. All fields
+ * correspond to the x86 registers at the time the trap occurred.
+ */
 struct Ureg {
     unsigned long di; /* general registers */
     unsigned long si; /* ... */

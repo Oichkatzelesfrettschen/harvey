@@ -1,6 +1,7 @@
 #include "acd.h"
 #include <stdint.h>
 
+/* Allocate zero-initialized memory or abort on failure. */
 void *emalloc(uint n) {
     void *p;
 
@@ -11,6 +12,7 @@ void *emalloc(uint n) {
     return p;
 }
 
+/* Duplicate a string using emalloc. */
 char *estrdup(char *s) {
     char *t;
 
@@ -19,6 +21,7 @@ char *estrdup(char *s) {
     return t;
 }
 
+/* Duplicate two strings into newly allocated memory. */
 char *estrstrdup(char *s, char *t) {
     char *u;
 
@@ -28,6 +31,7 @@ char *estrstrdup(char *s, char *t) {
     return u;
 }
 
+/* Append string 't' to 's' with a separator. */
 char *eappend(char *s, char *sep, char *t) {
     char *u;
 
@@ -43,12 +47,14 @@ char *eappend(char *s, char *sep, char *t) {
     return u;
 }
 
+/* Append 't' to 's' and free the appended piece. */
 char *egrow(char *s, char *sep, char *t) {
     s = eappend(s, sep, t);
     free(t);
     return s;
 }
 
+/* Print an error message and terminate all threads. */
 void error(char *fmt, ...) {
     int n;
     va_list arg;
@@ -63,6 +69,7 @@ void error(char *fmt, ...) {
     threadexitsall(fmt);
 }
 
+/* Formatted write to a control file, aborting on failure. */
 void ctlprint(int fd, char *fmt, ...) {
     int n;
     va_list arg;
