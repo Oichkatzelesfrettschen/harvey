@@ -1,21 +1,13 @@
 #include "acd.h"
 #include <stdint.h>
+#include <stdlib.h>
+#include <time.h>
 
 int debug;
 
 void usage(void) {
     fprint(2, "usage: acd dev\n");
-    threadexitsall("usage");
-}
-
-Alt mkalt(Channel *c, void *v, int op) {
-    Alt a;
-
-    memset(&a, 0, sizeof(a));
-    a.c = c;
-    a.v = v;
-    a.op = op;
-    return a;
+    exit(1);
 }
 
 void freetoc(Toc *t) {
@@ -82,7 +74,7 @@ void eventwatcher(Drive *d) {
     }
 }
 
-void threadmain(int argc, char **argv) {
+int main(int argc, char **argv) {
     Scsi *s;
     Drive *d;
     char buf[80];
@@ -96,6 +88,9 @@ void threadmain(int argc, char **argv) {
 
     if (argc != 1)
         usage();
+
+    /* randomize alt scheduling */
+    srand((unsigned)time(NULL));
 
     fmtinstall('M', msfconv);
 
@@ -114,9 +109,13 @@ void threadmain(int argc, char **argv) {
     d->cdbreply = chancreate(sizeof(Toc), 0);
     d->cstatus = chancreate(sizeof(Cdstatus), 0);
 
-    proccreate(wineventproc, d->w, STACK);
-    proccreate(cddbproc, d, STACK);
-    proccreate(cdstatusproc, d, STACK);
+    thrd_t t1, t2, t3;
+    thrd_create(&t1, wineventproc, d->w);
+    thrd_detach(t1);
+    thrd_create(&t2, cddbproc, d);
+    thrd_detach(t2);
+    thrd_create(&t3, cdstatusproc, d);
+    thrd_detach(t3);
 
     cleanname(argv[0]);
     snprint(buf, sizeof(buf), "%s/", argv[0]);
@@ -124,4 +123,5 @@ void threadmain(int argc, char **argv) {
 
     wintagwrite(d->w, "Stop Pause Resume Eject Ingest ", 5 + 6 + 7 + 6 + 7);
     eventwatcher(d);
+    return 0;
 }

@@ -242,7 +242,7 @@ static int playstatus(Drive *d, Cdstatus *stat) {
     return 0;
 }
 
-void cdstatusproc(void *v) {
+int cdstatusproc(void *v) {
     Drive *d;
     Toc t;
     Cdstatus s;
@@ -250,7 +250,6 @@ void cdstatusproc(void *v) {
     t.changetime = ~0;
     t.nchange = ~0;
 
-    threadsetname("cdstatusproc");
     d = v;
     DPRINT(2, "cdstatus %d\n", getpid());
     for (;;) {
@@ -270,4 +269,5 @@ void cdstatusproc(void *v) {
         }
         sleep(1000);
     }
+    return 0;
 }
