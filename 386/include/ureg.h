@@ -1,6 +1,10 @@
 #pragma once
 #include <stdint.h>
 
+/*
+ * Machine register state used by the kernel when servicing traps or
+ * interrupts. Matches the layout expected by trap handlers.
+ */
 struct Ureg {
     ulong di; /* general registers */
     ulong si; /* ... */

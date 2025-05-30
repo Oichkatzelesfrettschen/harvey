@@ -3,18 +3,18 @@
 
 Toc thetoc;
 
-void tocthread(void *v) {
+int tocthread(void *v) {
     Drive *d;
 
-    threadsetname("tocthread");
     d = v;
-    DPRINT(2, "recv ctocdisp?...");
+    LOG(2, "recv ctocdisp?...");
     while (recv(d->ctocdisp, &thetoc) == 1) {
-        DPRINT(2, "recv ctocdisp!...");
+        LOG(2, "recv ctocdisp!...");
         drawtoc(d->w, &thetoc);
-        DPRINT(2, "send dbreq...\n");
+        LOG(2, "send dbreq...\n");
         send(d->ctocdbreq, &thetoc);
     }
+    return 0;
 }
 
 void freetoc(Toc *t) {
@@ -25,11 +25,10 @@ void freetoc(Toc *t) {
         free(t->track[i].title);
 }
 
-void cddbthread(void *v) {
+int cddbthread(void *v) {
     Drive *d;
     Toc t;
 
-    threadsetname("cddbthread");
     d = v;
     while (recv(d->ctocdbreply, &t) == 1) {
         if (thetoc.nchange == t.nchange) {
@@ -38,9 +37,10 @@ void cddbthread(void *v) {
             redrawtoc(d->w, &thetoc);
         }
     }
+    return 0;
 }
 
-void cdstatusthread(void *v) {
+int cdstatusthread(void *v) {
     Drive *d;
     Cdstatus s;
 
@@ -48,4 +48,5 @@ void cdstatusthread(void *v) {
 
     for (;;)
         recv(d->cstat, &s);
+    return 0;
 }

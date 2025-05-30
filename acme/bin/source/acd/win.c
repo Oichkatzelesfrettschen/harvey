@@ -1,4 +1,5 @@
 #include "acd.h"
+#include <errno.h>
 #include <stdint.h>
 
 Window *newwindow(void) {
@@ -28,11 +29,10 @@ void winsetdump(Window *w, char *dir, char *cmd) {
         ctlprint(w->ctl, "dump %s\n", cmd);
 }
 
-void wineventproc(void *v) {
+int wineventproc(void *v) {
     Window *w;
     int i;
 
-    threadsetname("wineventproc");
     w = v;
     for (i = 0;; i++) {
         if (i >= NEVENT)
@@ -40,13 +40,14 @@ void wineventproc(void *v) {
         wingetevent(w, &w->e[i]);
         sendp(w->cevent, &w->e[i]);
     }
+    return 0;
 }
 
 int winopenfile(Window *w, char *f) {
     char buf[64];
     int fd;
 
-    sprint(buf, "/mnt/wsys/%d/%s", w->id, f);
+    snprintf(buf, sizeof(buf), "/mnt/wsys/%d/%s", w->id, f);
     fd = open(buf, ORDWR | OCEXEC);
     if (fd < 0)
         error("can't open window file %s: %r", f);
@@ -69,15 +70,17 @@ void winname(Window *w, char *s) {
 void winopenbody(Window *w, int mode) {
     char buf[256];
 
-    sprint(buf, "/mnt/wsys/%d/body", w->id);
-    w->body = Bopen(buf, mode | OCEXEC);
+    /* open the body file using stdio for buffered access */
+    snprintf(buf, sizeof(buf), "/mnt/wsys/%d/body", w->id);
+    w->body = fopen(buf, mode == OREAD ? "r" : "w");
     if (w->body == NULL)
-        error("can't open window body file: %r");
+        error("can't open window body file: %s", strerror(errno));
 }
 
 void winclosebody(Window *w) {
     if (w->body != NULL) {
-        Bterm(w->body);
+        /* close and discard buffered body file */
+        fclose(w->body);
         w->body = NULL;
     }
 }
@@ -85,8 +88,9 @@ void winclosebody(Window *w) {
 void winwritebody(Window *w, char *s, int n) {
     if (w->body == NULL)
         winopenbody(w, OWRITE);
-    if (Bwrite(w->body, s, n) != n)
-        error("write error to window: %r");
+    /* write buffered body text */
+    if (fwrite(s, 1, n, w->body) != (size_t)n)
+        error("write error to window: %s", strerror(errno));
 }
 
 int wingetec(Window *w) {
@@ -95,7 +99,7 @@ int wingetec(Window *w) {
         if (w->nbuf <= 0) {
             /* probably because window has exited, and only called by wineventproc, so just shut
              * down */
-            threadexits(NULL);
+            thrd_exit(NULL);
         }
         w->bufp = w->buf;
     }
@@ -153,7 +157,12 @@ void wingetevent(Window *w, Event *e) {
 }
 
 void winwriteevent(Window *w, Event *e) {
-    fprint(w->event, "%c%c%d %d\n", e->c1, e->c2, e->q0, e->q1);
+    /* send event using stdio wrappers */
+    FILE *fp = fdopen(dup(w->event), "w");
+    if (fp) {
+        fprintf(fp, "%c%c%d %d\n", e->c1, e->c2, e->q0, e->q1);
+        fclose(fp);
+    }
 }
 
 static int nrunes(char *s, int nb) {
@@ -176,7 +185,7 @@ void winread(Window *w, uint q0, uint q1, char *data) {
         w->data = winopenfile(w, "data");
     m = q0;
     while (m < q1) {
-        n = sprint(buf, "#%d", m);
+        n = snprintf(buf, sizeof(buf), "#%d", m);
         if (write(w->addr, buf, n) != n)
             error("error writing addr: %r");
         n = read(w->data, buf, sizeof buf);
@@ -204,7 +213,8 @@ void windormant(Window *w) {
         w->addr = -1;
     }
     if (w->body != NULL) {
-        Bterm(w->body);
+        /* close buffered body handle */
+        fclose(w->body);
         w->body = NULL;
     }
     if (w->data >= 0) {
@@ -229,7 +239,8 @@ int windel(Window *w, int sure) {
 
 void winclean(Window *w) {
     if (w->body)
-        Bflush(w->body);
+        /* flush buffered writes */
+        fflush(w->body);
     ctlprint(w->ctl, "clean\n");
 }
 
@@ -269,7 +280,8 @@ char *winreadbody(Window *w,
             na += 1024;
             s = realloc(s, na + 1);
         }
-        m = Bread(w->body, s + n, na - n);
+        /* read from buffered body */
+        m = fread(s + n, 1, na - n, w->body);
         if (m <= 0)
             break;
         n += m;

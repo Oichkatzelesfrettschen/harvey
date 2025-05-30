@@ -61,6 +61,8 @@ REQUIRED_PACKAGES=(
   shellcheck
   graphviz
   doxygen
+  compiledb
+  configuredb
   llvm
   lld
   coq
@@ -86,21 +88,9 @@ for pkg in "${REQUIRED_PACKAGES[@]}"; do
   install_pkg "$pkg"
 done
 
-# Install pre-commit via pip
-if ! pip3 install --no-cache-dir pre-commit; then
-  echo "pip3 install pre-commit failed" >> "$FAIL_LOG"
-fi
-
 # Install PyYAML for Python hooks
 if ! pip3 install --no-cache-dir pyyaml; then
   echo "pip3 install pyyaml failed" >> "$FAIL_LOG"
-fi
-
-# Install git pre-commit hooks
-if command -v pre-commit >/dev/null 2>&1; then
-  if ! pre-commit install --install-hooks; then
-    echo "pre-commit install failed" >> "$FAIL_LOG"
-  fi
 fi
 
 apt-get clean

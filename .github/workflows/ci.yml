@@ -21,8 +21,7 @@ jobs:
         run: ./setup.sh
       - name: Build
         run: make CFLAGS="${{ matrix.cflags }}"
-      - name: Run pre-commit
-        run: pre-commit run --all-files
+      - uses: pre-commit/action@v3.0.0
       - name: clang-tidy
         run: |
           clang-tidy --config-file=clang-tidy.config $(find . -name '*.c' -o -name '*.h') -- -std=c17 ${{ matrix.cflags }}

@@ -1,6 +1,11 @@
 #include "acd.h"
+#include <errno.h>
 #include <stdint.h>
+#include <stdio.h>
 
+/*
+ * Format an Msf structure as M.S.F for use with Fmt printing routines.
+ */
 int msfconv(Fmt *fp) {
     Msf m;
 
@@ -9,6 +14,7 @@ int msfconv(Fmt *fp) {
     return 0;
 }
 
+/* Issue the MMC 'status' command. */
 static int status(Drive *d) {
     uint8_t cmd[12];
 
@@ -17,6 +23,9 @@ static int status(Drive *d) {
     return scsi(d->scsi, cmd, sizeof cmd, NULL, 0, Snone);
 }
 
+/*
+ * Play the CD from the given start frame to end frame using an MMC command.
+ */
 static int playmsf(Drive *d, Msf start, Msf end) {
     uint8_t cmd[12];
 
@@ -32,6 +41,9 @@ static int playmsf(Drive *d, Msf start, Msf end) {
     return scsi(d->scsi, cmd, sizeof cmd, NULL, 0, Snone);
 }
 
+/*
+ * Play the range of tracks inclusive using playmsf(). Returns -1 on error.
+ */
 int playtrack(Drive *d, int start, int end) {
     Toc *t;
 
@@ -50,6 +62,7 @@ int playtrack(Drive *d, int start, int end) {
     return playmsf(d, t->track[start].start, t->track[end].end);
 }
 
+/* Resume playback after a pause. */
 int resume(Drive *d) {
     uint8_t cmd[12];
 
@@ -59,6 +72,7 @@ int resume(Drive *d) {
     return scsi(d->scsi, cmd, sizeof cmd, NULL, 0, Snone);
 }
 
+/* Pause playback. */
 int pause(Drive *d) {
     uint8_t cmd[12];
 
@@ -67,6 +81,7 @@ int pause(Drive *d) {
     return scsi(d->scsi, cmd, sizeof cmd, NULL, 0, Snone);
 }
 
+/* Stop playback. */
 int stop(Drive *d) {
     uint8_t cmd[12];
 
@@ -75,6 +90,7 @@ int stop(Drive *d) {
     return scsi(d->scsi, cmd, sizeof cmd, NULL, 0, Snone);
 }
 
+/* Eject the media from the drive. */
 int eject(Drive *d) {
     uint8_t cmd[12];
 
@@ -85,6 +101,7 @@ int eject(Drive *d) {
     return scsi(d->scsi, cmd, sizeof cmd, NULL, 0, Snone);
 }
 
+/* Load (ingest) media into the drive. */
 int ingest(Drive *d) {
     uint8_t cmd[12];
 
@@ -95,6 +112,7 @@ int ingest(Drive *d) {
     return scsi(d->scsi, cmd, sizeof cmd, NULL, 0, Snone);
 }
 
+/* Convert three BCD bytes to an Msf structure. */
 static Msf rdmsf(uint8_t *p) {
     Msf msf;
 
@@ -104,11 +122,13 @@ static Msf rdmsf(uint8_t *p) {
     return msf;
 }
 
+/* Read a 24-bit big-endian integer. */
 static uint32_t rdlba(uint8_t *p) {
     return (p[0] << 16) | (p[1] << 8) | p[2];
 }
 
 /* not a Drive, so that we don't accidentally touch Drive.toc */
+/* Query the table of contents from the drive into 't'. */
 int gettoc(Scsi *s, Toc *t) {
     int i, n;
     uint8_t cmd[12];
@@ -129,7 +149,7 @@ Again:
 
     if (s->changetime == 0) {
         t->ntrack = 0;
-        werrstr("no media");
+        fprintf(stderr, "no media\n");
         return -1;
     }
 
@@ -142,13 +162,13 @@ Again:
     if (t->ntrack > MTRACK)
         t->ntrack = MTRACK;
 
-    DPRINT(2, "%d %d\n", resp[3], resp[2]);
+    LOG(2, "%d %d\n", resp[3], resp[2]);
     t->ntrack = resp[3] - resp[2] + 1;
     t->track0 = resp[2];
 
     n = ((resp[0] << 8) | resp[1]) + 2;
     if (n < 4 + 8 * (t->ntrack + 1)) {
-        werrstr("bad read0 %d %d", n, 4 + 8 * (t->ntrack + 1));
+        fprintf(stderr, "bad read0 %d %d: %s\n", n, 4 + 8 * (t->ntrack + 1), strerror(errno));
         return -1;
     }
 
@@ -166,13 +186,13 @@ Again:
         return -1;
 
     if (s->changetime != t->changetime || s->nchange != t->nchange) {
-        fprint(2, "disk changed underfoot; repeating\n");
+        fprintf(stderr, "disk changed underfoot; repeating\n");
         goto Again;
     }
 
     n = ((resp[0] << 8) | resp[1]) + 2;
     if (n < 4 + 8 * (t->ntrack + 1)) {
-        werrstr("bad read");
+        fprintf(stderr, "bad read: %s\n", strerror(errno));
         return -1;
     }
 
@@ -185,15 +205,17 @@ Again:
     return 0;
 }
 
+/* Debug helper to print the contents of a Toc. */
 static void dumptoc(Toc *t) {
     int i;
 
-    fprint(1, "%d tracks\n", t->ntrack);
+    fprintf(stdout, "%d tracks\n", t->ntrack);
     for (i = 0; i < t->ntrack; i++)
         print("%d. %M-%M (%lud-%lud)\n", i + 1, t->track[i].start, t->track[i].end,
               t->track[i].bstart, t->track[i].bend);
 }
 
+/* Send a benign MMC command to keep the drive awake. */
 static void ping(Drive *d) {
     uint8_t cmd[12];
 
@@ -202,6 +224,7 @@ static void ping(Drive *d) {
     scsi(d->scsi, cmd, sizeof(cmd), NULL, 0, Snone);
 }
 
+/* Retrieve current play status from the drive. */
 static int playstatus(Drive *d, Cdstatus *stat) {
     uint8_t cmd[12], resp[16];
 
@@ -242,6 +265,11 @@ static int playstatus(Drive *d, Cdstatus *stat) {
     return 0;
 }
 
+
+/*
+ * Background thread that polls the drive for status and TOC changes and sends
+ * updates over the drive's channels.
+ */
 void cdstatusproc(void *v) {
     Drive *d;
     Toc t;
@@ -250,24 +278,24 @@ void cdstatusproc(void *v) {
     t.changetime = ~0;
     t.nchange = ~0;
 
-    threadsetname("cdstatusproc");
     d = v;
-    DPRINT(2, "cdstatus %d\n", getpid());
+    LOG(2, "cdstatus %d\n", getpid());
     for (;;) {
         ping(d);
-        // DPRINT(2, "d %d %d t %d %d\n", d->scsi->changetime, d->scsi->nchange, t.changetime,
+        // LOG(2, "d %d %d t %d %d\n", d->scsi->changetime, d->scsi->nchange, t.changetime,
         // t.nchange);
         if (playstatus(d, &s) == 0)
             send(d->cstatus, &s);
         if (d->scsi->changetime != t.changetime || d->scsi->nchange != t.nchange) {
             if (gettoc(d->scsi, &t) == 0) {
-                DPRINT(2, "sendtoc...\n");
+                LOG(2, "sendtoc...\n");
                 if (debug)
                     dumptoc(&t);
                 send(d->ctocdisp, &t);
             } else
-                DPRINT(2, "error: %r\n");
+                LOG(2, "error: %r\n");
         }
         sleep(1000);
     }
+    return 0;
 }

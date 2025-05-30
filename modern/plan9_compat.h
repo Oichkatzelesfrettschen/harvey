@@ -5,6 +5,11 @@
 #include <stdlib.h>
 #include <string.h>
 
+/*
+ * Simple channel implementation using pthread primitives. A single value can
+ * be stored in 'buf' and synchronization is handled with a mutex and
+ * condition variable.
+ */
 typedef struct Channel {
     pthread_mutex_t m;
     pthread_cond_t c;
@@ -14,6 +19,10 @@ typedef struct Channel {
 } Channel;
 
 typedef struct Alt Alt;
+/*
+ * Alt structure used by the alt function to wait on multiple channel
+ * operations. Each Alt specifies a channel, a value pointer and an operation.
+ */
 struct Alt {
     Channel *c;
     void *v;
@@ -22,6 +31,7 @@ struct Alt {
 
 enum { CHANSND, CHANRCV, CHANNOP, CHANEND };
 
+/* Create a channel object capable of sending values of the given size. */
 static inline Channel *chancreate(size_t size, int buffered) {
     Channel *ch = malloc(sizeof(Channel));
     if (!ch)
@@ -35,6 +45,7 @@ static inline Channel *chancreate(size_t size, int buffered) {
     return ch;
 }
 
+/* Send a value through the channel, blocking any receivers. */
 static inline int send(Channel *ch, void *v) {
     pthread_mutex_lock(&ch->m);
     memcpy(ch->buf, v, ch->size);
@@ -44,6 +55,7 @@ static inline int send(Channel *ch, void *v) {
     return 1;
 }
 
+/* Receive a value from the channel, blocking until one is available. */
 static inline int recv(Channel *ch, void *v) {
     pthread_mutex_lock(&ch->m);
     while (!ch->ready)
@@ -54,6 +66,7 @@ static inline int recv(Channel *ch, void *v) {
     return 1;
 }
 
+/* Send a pointer through the channel without copying. */
 static inline int sendp(Channel *ch, void *v) {
     pthread_mutex_lock(&ch->m);
     ch->buf = v;
@@ -63,6 +76,7 @@ static inline int sendp(Channel *ch, void *v) {
     return 1;
 }
 
+/* Receive a pointer previously sent with sendp. */
 static inline void *recvp(Channel *ch) {
     pthread_mutex_lock(&ch->m);
     while (!ch->ready)
@@ -73,6 +87,7 @@ static inline void *recvp(Channel *ch) {
     return v;
 }
 
+/* Construct an Alt descriptor for use with alt(). */
 static inline Alt mkalt(Channel *c, void *v, int op) {
     Alt a;
     a.c = c;
@@ -81,6 +96,7 @@ static inline Alt mkalt(Channel *c, void *v, int op) {
     return a;
 }
 
+/* Wait on multiple channel operations, returning the index selected. */
 static inline int alt(Alt *a) {
     for (int i = 0;; ++i) {
         switch (a[i].op) {
@@ -102,12 +118,14 @@ static inline int alt(Alt *a) {
     }
 }
 
+/* Spawn a detached thread executing 'fn'. */
 static inline int proccreate(void (*fn)(void *), void *arg, unsigned stack) {
     pthread_t t;
     (void)stack;
     return pthread_create(&t, NULL, (void *(*)(void *))fn, arg) == 0;
 }
 
+/* Set the current thread's name where supported. */
 static inline void threadsetname(const char *name) {
 #if defined(__linux__)
     pthread_setname_np(pthread_self(), name);
@@ -118,11 +136,13 @@ static inline void threadsetname(const char *name) {
 #endif
 }
 
+/* Terminate the entire process, ignoring the message. */
 static inline void threadexitsall(const char *msg) {
     (void)msg;
     exit(0);
 }
 
+/* Terminate only the calling thread. */
 static inline void threadexits(const char *msg) {
     (void)msg;
     pthread_exit(NULL);

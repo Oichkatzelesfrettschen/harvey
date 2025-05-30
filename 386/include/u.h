@@ -6,27 +6,27 @@
 
 /* Basic type aliases using modern C17 fixed-width types. */
 #define nil ((void *)0)
-typedef uint16_t ushort;
-typedef uint8_t uchar;
-typedef unsigned long ulong;
-typedef uint32_t uint;
-typedef int8_t schar;
-typedef int64_t vlong;
-typedef uint64_t uvlong;
-typedef uintptr_t uintptr;
-typedef size_t usize;
-typedef uint32_t Rune;
+typedef uint16_t ushort;     /* 16-bit unsigned integer */
+typedef uint8_t uchar;       /* 8-bit unsigned integer */
+typedef unsigned long ulong; /* native unsigned long */
+typedef uint32_t uint;       /* 32-bit unsigned integer */
+typedef int8_t schar;        /* 8-bit signed integer */
+typedef int64_t vlong;       /* 64-bit signed integer */
+typedef uint64_t uvlong;     /* 64-bit unsigned integer */
+typedef uintptr_t uintptr;   /* unsigned integer the size of a pointer */
+typedef size_t usize;        /* alias for size_t */
+typedef uint32_t Rune;       /* Unicode code point */
 
 typedef union FPdbleword FPdbleword;
 typedef long jmp_buf[2];
 #define JMPBUFSP 0
 #define JMPBUFPC 1
 #define JMPBUFDPC 0
-typedef unsigned int mpdigit; /* for mp.h */
-typedef uint8_t u8int;
-typedef uint16_t u16int;
-typedef uint32_t u32int;
-typedef uint64_t u64int;
+typedef unsigned int mpdigit; /* for /sys/include/mp.h */
+typedef uint8_t u8int;        /* 8-bit unsigned integer */
+typedef uint16_t u16int;      /* 16-bit unsigned integer */
+typedef uint32_t u32int;      /* 32-bit unsigned integer */
+typedef uint64_t u64int;      /* 64-bit unsigned integer */
 
 /* FCR */
 #define FPINEX (1 << 5)

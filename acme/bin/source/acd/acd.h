@@ -2,7 +2,6 @@
 
 /*
  * C17 header for the acd utility.  The original Plan9 dependencies
- * have been removed and replaced with forward declarations and
  * standard C headers so the code can be compiled as freestanding
  * C17.
  */
@@ -10,15 +9,60 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <threads.h>
 
 /* Forward declarations for Plan9 types that the old code relied on. */
-typedef struct Biobuf Biobuf;
 typedef struct Channel Channel;
 typedef struct Scsi Scsi;
+
+/*
+ * A lightweight approximation of the Plan 9 `Channel`.  Messages are
+ * copied into an internal queue protected by a mutex.  When
+ * `capacity` is zero the channel behaves synchronously: a sender will
+ * block until a receiver consumes the message.
+ */
+struct Channel {
+    mtx_t lock;    /* protects all fields below */
+    cnd_t send_cv; /* wait here when no space is available */
+    cnd_t recv_cv; /* wait here when no data is available */
+
+    unsigned char *data; /* circular queue storage */
+    size_t esize;        /* size of each message */
+    int capacity;        /* number of queued messages; 0 => synchronous */
+    int count;           /* current number of messages */
+    int rpos;            /* read position in `data` */
+    int wpos;            /* write position in `data` */
+    int waiting_recv;    /* receivers waiting in synchronous mode */
+};
+
+typedef struct Alt Alt;
+struct Alt {
+    Channel *c; /* channel to operate on */
+    void *v;    /* buffer for send/recv */
+    int op;     /* CHANSND, CHANRCV, ... */
+};
+
+enum { CHANSND, CHANRCV, CHANNOP, CHANEND };
+
+Alt mkalt(Channel *, void *, int);
+int alt(Alt *);
+Channel *chancreate(size_t, int);
+int send(Channel *, void *);
+int recv(Channel *, void *);
+int sendp(Channel *, void *);
+void *recvp(Channel *);
+int chan_try_send(Channel *, void *);
+int chan_try_recv(Channel *, void *);
 
 /* Simple stand-ins for historical Plan9 types. */
 typedef unsigned long ulong;
 typedef uint32_t uint;
+/* Simple stand-ins for historical Plan9 types.
+ * These aliases mirror the common Plan 9 names while
+ * using explicit C99 fixed-width types for clarity.
+ */
+typedef unsigned long ulong; /* native unsigned long */
+typedef uint32_t uint;       /* 32-bit unsigned integer */
 
 /* acme */
 typedef struct Fmt Fmt; /* Formatting context placeholder */
@@ -51,7 +95,7 @@ struct Window {
     int event;
     int addr;
     int data;
-    Biobuf *body;
+    FILE *body; /* buffered body file */
 
     /* event input */
     char buf[512];
@@ -74,7 +118,7 @@ extern void winwriteevent(Window *, Event *);
 extern void winread(Window *, uint, uint, char *);
 extern int windel(Window *, int);
 extern void wingetevent(Window *, Event *);
-extern void wineventproc(void *);
+extern int wineventproc(void *);
 extern void winwritebody(Window *, char *, int);
 extern void winclean(Window *);
 extern int winselect(Window *, char *, int);
@@ -157,15 +201,22 @@ struct Drive {
 int gettoc(Scsi *, Toc *);
 void drawtoc(Window *, Drive *, Toc *);
 void redrawtoc(Window *, Toc *);
-void tocproc(void *);      /* Drive* */
-void cddbproc(void *);     /* Drive* */
-void cdstatusproc(void *); /* Drive* */
+int tocproc(void *);      /* Drive* */
+int cddbproc(void *);     /* Drive* */
+int cdstatusproc(void *); /* Drive* */
 
+/* Global debug level controlling verbosity of diagnostic output. */
 extern int debug;
 
 #define DPRINT                                                                                     \
     if (debug)                                                                                     \
-    fprint
+        fprintf(stderr,
+/* Debug logging helper with a verbosity level. */
+#define LOG(level, ...)                                                                            \
+    do {                                                                                           \
+        if (debug >= (level))                                                                      \
+            fprintf(stderr, __VA_ARGS__);                                                          \
+    } while (0)
 void acmeevent(Drive *, Window *, Event *);
 
 int playtrack(Drive *, int, int);
