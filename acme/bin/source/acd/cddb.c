@@ -98,16 +98,6 @@ static int cddbfilltoc(Toc *t) {
     m = &t->track[t->ntrack - 1].end;
     fprintf(bin, " %d\r\n", m->m * 60 + m->s);
     DPRINT(2, " %d\r\n", m->m * 60 + m->s);
-    fprint(fd, "cddb query %8.8lux %d", diskid(t), t->ntrack);
-    LOG(2, "cddb query %8.8lux %d", diskid(t), t->ntrack);
-    for (i = 0; i < t->ntrack; i++) {
-        m = &t->track[i].start;
-        fprint(fd, " %d", (m->m * 60 + m->s) * 75 + m->f);
-        LOG(2, " %d", (m->m * 60 + m->s) * 75 + m->f);
-    }
-    m = &t->track[t->ntrack - 1].end;
-    fprint(fd, " %d\r\n", m->m * 60 + m->s);
-    LOG(2, " %d\r\n", m->m * 60 + m->s);
 
     fflush(bin);
     if (fgets(line, sizeof(line), bin) == NULL || atoi(line) / 100 != 2)
@@ -115,9 +105,7 @@ static int cddbfilltoc(Toc *t) {
     line[strcspn(line, "\n")] = '\0';
     DPRINT(2, "cddb: %s\n", line);
     nf = tokenize(line, f, nelem(f));
-    p[Blinelen(&bin) - 1] = 0;
-    LOG(2, "cddb: %s\n", p);
-    nf = tokenize(p, f, (int)(sizeof(f) / sizeof(f[0])));
+    LOG(2, "cddb: %s\n", line);
     if (nf < 1)
         goto died;
 
@@ -137,7 +125,6 @@ static int cddbfilltoc(Toc *t) {
 
         /* accept first match */
         nf = tokenize(line, f, nelem(f));
-        nf = tokenize(p, f, (int)(sizeof(f) / sizeof(f[0])));
         if (nf < 2)
             goto died;
         categ = f[0];
@@ -149,8 +136,7 @@ static int cddbfilltoc(Toc *t) {
                 goto died;
             line[strcspn(line, "\n")] = '\0';
             DPRINT(2, "cddb: %s\n", line);
-            p[Blinelen(&bin) - 1] = '\0';
-            LOG(2, "cddb: %s\n", p);
+            LOG(2, "cddb: %s\n", line);
         }
         break;
     case 202: /* no match */
@@ -172,8 +158,6 @@ static int cddbfilltoc(Toc *t) {
             *q-- = 0;
         DPRINT(2, "cddb %s\n", line);
         if (strncmp(line, "DTITLE=", 7) == 0) {
-        LOG(2, "cddb %s\n", p);
-        if (strncmp(p, "DTITLE=", 7) == 0) {
             if (gottitle)
                 append(&t->title, line + 7);
             else

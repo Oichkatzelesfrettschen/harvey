@@ -112,7 +112,6 @@ int markplay(Window *w, ulong q0) {
 
     snprintf(buf, sizeof(buf), "#%lud", q0);
     DPRINT(2, "addr %s\n", buf);
-    sprint(buf, "#%lud", q0);
     LOG(2, "addr %s\n", buf);
     if (!winsetaddr(w, buf, 1) || !winsetaddr(w, "-0", 1))
         return 0;

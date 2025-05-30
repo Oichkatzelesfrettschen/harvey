@@ -2,6 +2,11 @@
 #include <errno.h>
 #include <stdint.h>
 
+/*
+ * Allocate and initialize a new acme window by interacting with
+ * the /mnt/wsys control files.  Returns a freshly allocated Window
+ * structure on success and terminates the program on failure.
+ */
 Window *newwindow(void) {
     char buf[12];
     Window *w;
@@ -9,7 +14,7 @@ Window *newwindow(void) {
     w = emalloc(sizeof(Window));
     w->ctl = open("/mnt/wsys/new/ctl", ORDWR | OCEXEC);
     if (w->ctl < 0 || read(w->ctl, buf, 12) != 12)
-        error("can't open window ctl file: %r");
+        error("can't open window ctl file: %s", strerror(errno));
     ctlprint(w->ctl, "noscroll\n");
     w->id = atoi(buf);
     w->event = winopenfile(w, "event");
@@ -18,10 +23,11 @@ Window *newwindow(void) {
     w->data = -1;
     w->cevent = chancreate(sizeof(Event *), 0);
     if (w->cevent == NULL)
-        error("cevent is NULL: %r");
+        error("cevent allocation failed");
     return w;
 }
 
+/* Configure dump directory and command for the window. */
 void winsetdump(Window *w, char *dir, char *cmd) {
     if (dir != NULL)
         ctlprint(w->ctl, "dumpdir %s\n", dir);
@@ -29,6 +35,10 @@ void winsetdump(Window *w, char *dir, char *cmd) {
         ctlprint(w->ctl, "dump %s\n", cmd);
 }
 
+/*
+ * Background thread that continuously reads events from the window
+ * and forwards them over the channel attached to the Window.
+ */
 int wineventproc(void *v) {
     Window *w;
     int i;
@@ -43,6 +53,10 @@ int wineventproc(void *v) {
     return 0;
 }
 
+/*
+ * Open one of the per-window files under /mnt/wsys/<id>/ using
+ * regular POSIX I/O and return its file descriptor.
+ */
 int winopenfile(Window *w, char *f) {
     char buf[64];
     int fd;
@@ -50,23 +64,29 @@ int winopenfile(Window *w, char *f) {
     snprintf(buf, sizeof(buf), "/mnt/wsys/%d/%s", w->id, f);
     fd = open(buf, ORDWR | OCEXEC);
     if (fd < 0)
-        error("can't open window file %s: %r", f);
+        error("can't open window file %s: %s", f, strerror(errno));
     return fd;
 }
 
+/* Write a string to the window's tag file. */
 void wintagwrite(Window *w, char *s, int n) {
     int fd;
 
     fd = winopenfile(w, "tag");
     if (write(fd, s, n) != n)
-        error("tag write: %r");
+        error("tag write: %s", strerror(errno));
     close(fd);
 }
 
+/* Set the window's name string. */
 void winname(Window *w, char *s) {
     ctlprint(w->ctl, "name %s\n", s);
 }
 
+/*
+ * Open the body file associated with the window.  The file is opened
+ * using stdio so reads and writes can be buffered conveniently.
+ */
 void winopenbody(Window *w, int mode) {
     char buf[256];
 
@@ -77,6 +97,7 @@ void winopenbody(Window *w, int mode) {
         error("can't open window body file: %s", strerror(errno));
 }
 
+/* Close the buffered body file if it is open. */
 void winclosebody(Window *w) {
     if (w->body != NULL) {
         /* close and discard buffered body file */
@@ -85,6 +106,7 @@ void winclosebody(Window *w) {
     }
 }
 
+/* Append text to the window body using buffered I/O. */
 void winwritebody(Window *w, char *s, int n) {
     if (w->body == NULL)
         winopenbody(w, OWRITE);
@@ -187,10 +209,10 @@ void winread(Window *w, uint q0, uint q1, char *data) {
     while (m < q1) {
         n = snprintf(buf, sizeof(buf), "#%d", m);
         if (write(w->addr, buf, n) != n)
-            error("error writing addr: %r");
+            error("error writing addr: %s", strerror(errno));
         n = read(w->data, buf, sizeof buf);
         if (n <= 0)
-            error("reading data: %r");
+            error("reading data: %s", strerror(errno));
         nr = nrunes(buf, n);
         while (m + nr > q1) {
             do
@@ -207,6 +229,7 @@ void winread(Window *w, uint q0, uint q1, char *data) {
     }
 }
 
+/* Close any open per-window resources without deleting the window. */
 void windormant(Window *w) {
     if (w->addr >= 0) {
         close(w->addr);
@@ -223,6 +246,7 @@ void windormant(Window *w) {
     }
 }
 
+/* Delete the window.  If 'sure' is non-zero the delete is forced. */
 int windel(Window *w, int sure) {
     if (sure)
         write(w->ctl, "delete\n", 7);
@@ -237,6 +261,7 @@ int windel(Window *w, int sure) {
     return 1;
 }
 
+/* Flush pending body writes and mark the window clean. */
 void winclean(Window *w) {
     if (w->body)
         /* flush buffered writes */
@@ -249,7 +274,7 @@ int winsetaddr(Window *w, char *addr, int errok) {
         w->addr = winopenfile(w, "addr");
     if (write(w->addr, addr, strlen(addr)) < 0) {
         if (!errok)
-            error("error writing addr(%s): %r", addr);
+            error("error writing addr(%s): %s", addr, strerror(errno));
         return 0;
     }
     return 1;
@@ -263,9 +288,12 @@ int winselect(Window *w, char *addr, int errok) {
     return 0;
 }
 
-char *winreadbody(Window *w,
-                  int *np) /* can't use readfile because acme doesn't report the length */
-{
+/*
+ * Read the entire body of the window into a newly allocated buffer.
+ * The caller must free the returned string.  The number of bytes
+ * read is stored in *np.
+ */
+char *winreadbody(Window *w, int *np) {
     char *s;
     int m, na, n;
 
