@@ -28,11 +28,10 @@ void winsetdump(Window *w, char *dir, char *cmd) {
         ctlprint(w->ctl, "dump %s\n", cmd);
 }
 
-void wineventproc(void *v) {
+int wineventproc(void *v) {
     Window *w;
     int i;
 
-    threadsetname("wineventproc");
     w = v;
     for (i = 0;; i++) {
         if (i >= NEVENT)
@@ -40,6 +39,7 @@ void wineventproc(void *v) {
         wingetevent(w, &w->e[i]);
         sendp(w->cevent, &w->e[i]);
     }
+    return 0;
 }
 
 int winopenfile(Window *w, char *f) {
@@ -95,7 +95,7 @@ int wingetec(Window *w) {
         if (w->nbuf <= 0) {
             /* probably because window has exited, and only called by wineventproc, so just shut
              * down */
-            threadexits(NULL);
+            thrd_exit(NULL);
         }
         w->bufp = w->buf;
     }

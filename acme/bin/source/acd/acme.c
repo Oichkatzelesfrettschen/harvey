@@ -1,5 +1,6 @@
 #include "acd.h"
 #include <stdint.h>
+#include <stdlib.h>
 
 static int iscmd(char *s, char *cmd) {
     int len;
@@ -124,7 +125,7 @@ int cdcommand(Window *w, Drive *d, char *s) {
 
     if (iscmd(s, "Del")) {
         if (windel(w, 0))
-            threadexitsall(NULL);
+            exit(0);
         return 1;
     }
     if (iscmd(s, "Stop")) {

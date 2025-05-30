@@ -176,13 +176,13 @@ static int cddbfilltoc(Toc *t) {
     return 0;
 }
 
-void cddbproc(void *v) {
+int cddbproc(void *v) {
     Drive *d;
     Toc t;
 
-    threadsetname("cddbproc");
     d = v;
     while (recv(d->cdbreq, &t))
         if (cddbfilltoc(&t) == 0)
             send(d->cdbreply, &t);
+    return 0;
 }

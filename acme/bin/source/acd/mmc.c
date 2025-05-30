@@ -263,6 +263,7 @@ static int playstatus(Drive *d, Cdstatus *stat) {
     return 0;
 }
 
+
 /*
  * Background thread that polls the drive for status and TOC changes and sends
  * updates over the drive's channels.
@@ -275,7 +276,6 @@ void cdstatusproc(void *v) {
     t.changetime = ~0;
     t.nchange = ~0;
 
-    threadsetname("cdstatusproc");
     d = v;
     LOG(2, "cdstatus %d\n", getpid());
     for (;;) {
@@ -295,4 +295,5 @@ void cdstatusproc(void *v) {
         }
         sleep(1000);
     }
+    return 0;
 }
