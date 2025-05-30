@@ -11,9 +11,10 @@ cross compilation, Go tooling, and various utilities used by the
 CI workflows. These include `gcc-multilib`, `g++-multilib`, `rc`,
 `expect`, `go-dep`, `golang-go` and the `PyYAML` Python module.
 
-Before committing changes, run `pre-commit` to execute formatters and
-`clang-tidy` checks. The `./setup.sh` script installs the required
-tools and configures the git hook via `pre-commit install`.
+Before committing changes, run `pre-commit` or rely on the CI workflow
+which executes all hooks using the `pre-commit` GitHub action. The
+pipeline installs additional utilities such as `compiledb` and
+`configuredb`.
 
 To boot a custom Harvey kernel without a graphical console you can use
 `qemu-nox` via the helper script in `scripts/run_qemu_nox.sh`:
