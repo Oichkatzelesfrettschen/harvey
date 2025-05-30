@@ -1,5 +1,4 @@
-#ifndef PLAN9_COMPAT_H
-#define PLAN9_COMPAT_H
+#pragma once
 
 #ifdef USE_POSIX_THREADS
 #include <pthread.h>
@@ -25,7 +24,8 @@ enum { CHANSND, CHANRCV, CHANNOP, CHANEND };
 
 static inline Channel *chancreate(size_t size, int buffered) {
     Channel *ch = malloc(sizeof(Channel));
-    if (!ch) return NULL;
+    if (!ch)
+        return NULL;
     pthread_mutex_init(&ch->m, NULL);
     pthread_cond_init(&ch->c, NULL);
     ch->buf = malloc(size);
@@ -133,5 +133,3 @@ static inline void threadexits(const char *msg) {
 #else
 #include <thread.h>
 #endif
-
-#endif /* PLAN9_COMPAT_H */

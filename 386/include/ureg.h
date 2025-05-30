@@ -1,3 +1,6 @@
+#pragma once
+#include <stdint.h>
+
 struct Ureg {
     ulong di; /* general registers */
     ulong si; /* ... */

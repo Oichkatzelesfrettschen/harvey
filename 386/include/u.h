@@ -1,24 +1,32 @@
+#pragma once
+
+#include <stdarg.h>
+#include <stddef.h>
+#include <stdint.h>
+
+/* Basic type aliases using modern C17 fixed-width types. */
 #define nil ((void *)0)
-typedef unsigned short ushort;
-typedef unsigned char uchar;
+typedef uint16_t ushort;
+typedef uint8_t uchar;
 typedef unsigned long ulong;
-typedef unsigned int uint;
-typedef signed char schar;
-typedef long long vlong;
-typedef unsigned long long uvlong;
-typedef unsigned long uintptr;
-typedef unsigned long usize;
-typedef uint Rune;
+typedef uint32_t uint;
+typedef int8_t schar;
+typedef int64_t vlong;
+typedef uint64_t uvlong;
+typedef uintptr_t uintptr;
+typedef size_t usize;
+typedef uint32_t Rune;
+
 typedef union FPdbleword FPdbleword;
 typedef long jmp_buf[2];
 #define JMPBUFSP 0
 #define JMPBUFPC 1
 #define JMPBUFDPC 0
 typedef unsigned int mpdigit; /* for /sys/include/mp.h */
-typedef unsigned char u8int;
-typedef unsigned short u16int;
-typedef unsigned int u32int;
-typedef unsigned long long u64int;
+typedef uint8_t u8int;
+typedef uint16_t u16int;
+typedef uint32_t u32int;
+typedef uint64_t u64int;
 
 /* FCR */
 #define FPINEX (1 << 5)
@@ -43,17 +51,10 @@ typedef unsigned long long u64int;
 #define FPAINVAL FPINVAL
 union FPdbleword {
     double x;
-    struct { /* little endian */
-        ulong lo;
-        ulong hi;
+    struct {
+        uint32_t lo; /* little-endian low word */
+        uint32_t hi; /* little-endian high word */
     };
 };
 
-typedef char *va_list;
-#define va_start(list, start)                                                                      \
-    list = (sizeof(start) < 4 ? (char *)((int *)&(start) + 1) : (char *)(&(start) + 1))
-#define va_end(list) USED(list)
-#define va_arg(list, mode)                                                                         \
-    ((sizeof(mode) == 1)   ? ((list += 4), (mode *)list)[-4]                                       \
-     : (sizeof(mode) == 2) ? ((list += 4), (mode *)list)[-2]                                       \
-                           : ((list += sizeof(mode)), (mode *)list)[-1])
+/* Use the standard <stdarg.h> macros instead of custom versions. */

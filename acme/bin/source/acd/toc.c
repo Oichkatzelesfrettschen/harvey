@@ -1,4 +1,5 @@
 #include "acd.h"
+#include <stdint.h>
 
 Toc thetoc;
 

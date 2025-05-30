@@ -1,10 +1,11 @@
 #include "acd.h"
+#include <stdint.h>
 
 void *emalloc(uint n) {
     void *p;
 
     p = malloc(n);
-    if (p == nil)
+    if (p == NULL)
         error("can't malloc: %r");
     memset(p, 0, n);
     return p;
@@ -30,7 +31,7 @@ char *estrstrdup(char *s, char *t) {
 char *eappend(char *s, char *sep, char *t) {
     char *u;
 
-    if (t == nil)
+    if (t == NULL)
         u = estrstrdup(s, sep);
     else {
         u = emalloc(strlen(s) + strlen(sep) + strlen(t) + 1);

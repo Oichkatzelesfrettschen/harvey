@@ -1,5 +1,4 @@
-#ifndef HARVEY_SPINLOCK_H
-#define HARVEY_SPINLOCK_H
+#pragma once
 
 #include <stdatomic.h>
 #include <threads.h>
@@ -14,5 +13,3 @@ typedef struct {
 void spinlock_init(Spinlock *lock);
 void spinlock_acquire(Spinlock *lock);
 void spinlock_release(Spinlock *lock);
-
-#endif /* HARVEY_SPINLOCK_H */
