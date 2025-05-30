@@ -2,8 +2,10 @@
 
 #include <stdint.h>
 
-/* Minute, second, frame structure from original acd code.
- * Fields use explicit 32-bit types for portability. */
+/*
+ * Minute-second-frame structure from the original acd code. Fields use
+ * explicit 32-bit types for portability across 32/64-bit systems.
+ */
 typedef struct {
     int32_t m;
     int32_t s;
@@ -15,6 +17,10 @@ enum {
     MSF_FRAMES_PER_SEC = 75,
 };
 
+/*
+ * Convert a frame count to an Msf structure where one minute equals 75*60
+ * frames. Useful when translating from raw CD frame positions.
+ */
 static inline Msf msf_from_frames(uint32_t frames) {
     Msf msf;
     msf.m = (int32_t)(frames / (MSF_SECS_PER_MIN * MSF_FRAMES_PER_SEC));

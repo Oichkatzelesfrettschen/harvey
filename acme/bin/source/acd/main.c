@@ -3,11 +3,13 @@
 
 int debug;
 
+/* Print usage information and exit. */
 void usage(void) {
     fprint(2, "usage: acd dev\n");
     threadexitsall("usage");
 }
 
+/* Convenience wrapper for building Alt structures. */
 Alt mkalt(Channel *c, void *v, int op) {
     Alt a;
 
@@ -18,6 +20,7 @@ Alt mkalt(Channel *c, void *v, int op) {
     return a;
 }
 
+/* Free dynamically allocated strings in a Toc. */
 void freetoc(Toc *t) {
     int i;
 
@@ -26,6 +29,10 @@ void freetoc(Toc *t) {
         free(t->track[i].title);
 }
 
+/*
+ * Main event loop. Waits on window events, CD status updates and TOC changes
+ * and dispatches the appropriate handlers.
+ */
 void eventwatcher(Drive *d) {
     enum { STATUS, WEVENT, TOCDISP, DBREQ, DBREPLY, NALT };
     Alt alts[NALT + 1];
@@ -82,6 +89,7 @@ void eventwatcher(Drive *d) {
     }
 }
 
+/* Program entry point when using plan9 threads. */
 void threadmain(int argc, char **argv) {
     Scsi *s;
     Drive *d;
