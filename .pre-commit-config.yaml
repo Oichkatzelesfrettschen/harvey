@@ -25,3 +25,18 @@ repos:
         entry: hooks/clang_tidy.sh
         language: script
         files: \.(c|h)$
+      - id: clang-format
+        name: clang-format
+        entry: hooks/clang_format.sh
+        language: script
+        files: \.(c|h)$
+      - id: compiledb
+        name: compiledb
+        entry: hooks/compiledb.sh
+        language: script
+        files: \.(c|h)$
+      - id: configuredb
+        name: configuredb
+        entry: hooks/configuredb.sh
+        language: script
+        files: \.(c|h)$
