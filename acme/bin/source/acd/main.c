@@ -5,11 +5,24 @@
 
 int debug;
 
+/* Print usage information and exit. */
 void usage(void) {
     fprint(2, "usage: acd dev\n");
-    exit(1);
+    threadexitsall("usage");
 }
 
+/* Convenience wrapper for building Alt structures. */
+Alt mkalt(Channel *c, void *v, int op) {
+    Alt a;
+
+    memset(&a, 0, sizeof(a));
+    a.c = c;
+    a.v = v;
+    a.op = op;
+    return a;
+}
+
+/* Free dynamically allocated strings in a Toc. */
 void freetoc(Toc *t) {
     int i;
 
@@ -18,6 +31,10 @@ void freetoc(Toc *t) {
         free(t->track[i].title);
 }
 
+/*
+ * Main event loop. Waits on window events, CD status updates and TOC changes
+ * and dispatches the appropriate handlers.
+ */
 void eventwatcher(Drive *d) {
     enum { STATUS, WEVENT, TOCDISP, DBREQ, DBREPLY, NALT };
     Alt alts[NALT + 1];
@@ -38,22 +55,22 @@ void eventwatcher(Drive *d) {
     for (;;) {
         switch (alt(alts)) {
         case STATUS:
-            // DPRINT(2, "s...");
+            // LOG(2, "s...");
             d->status = s;
             if (s.state == Scompleted) {
                 s.state = Sunknown;
                 advancetrack(d, w);
             }
-            // DPRINT(2, "status %d %d %d %M %M\n", s.state, s.track, s.index, s.abs, s.rel);
+            // LOG(2, "status %d %d %d %M %M\n", s.state, s.track, s.index, s.abs, s.rel);
             sprint(buf, "%d:%2.2d", s.rel.m, s.rel.s);
             setplaytime(w, buf);
             break;
         case WEVENT:
-            // DPRINT(2, "w...");
+            // LOG(2, "w...");
             acmeevent(d, w, e);
             break;
         case TOCDISP:
-            // DPRINT(2,"td...");
+            // LOG(2,"td...");
             freetoc(&d->toc);
             d->toc = nt;
             drawtoc(w, d, &d->toc);
@@ -61,11 +78,11 @@ void eventwatcher(Drive *d) {
             alts[DBREQ].op = CHANSND;
             break;
         case DBREQ: /* sent */
-            // DPRINT(2,"dreq...");
+            // LOG(2,"dreq...");
             alts[DBREQ].op = CHANNOP;
             break;
         case DBREPLY:
-            // DPRINT(2,"drep...");
+            // LOG(2,"drep...");
             freetoc(&d->toc);
             d->toc = nt;
             redrawtoc(w, &d->toc);
@@ -75,6 +92,8 @@ void eventwatcher(Drive *d) {
 }
 
 int main(int argc, char **argv) {
+/* Program entry point when using plan9 threads. */
+void threadmain(int argc, char **argv) {
     Scsi *s;
     Drive *d;
     char buf[80];

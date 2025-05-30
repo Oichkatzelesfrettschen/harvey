@@ -6,6 +6,10 @@
 #include <stdint.h>
 #include <stdio.h>
 
+/*
+ * Entry point demonstrating argument parsing and spinlock usage. The program
+ * simply prints the parsed arguments and exits.
+ */
 int main(int argc, char **argv) {
     CmdArgs args = parse_args((int32_t)argc, argv);
     printf("C23 acd skeleton running on device %s. Verbose=%d\n", args.device, (int)args.verbose);

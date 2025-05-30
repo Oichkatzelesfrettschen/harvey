@@ -63,7 +63,7 @@ int setplaytime(Window *w, char *new) {
 
     q1--; /* > */
     sprint(buf, "#%lud,#%lud", q0, q1);
-    DPRINT(2, "setaddr %s\n", buf);
+    LOG(2, "setaddr %s\n", buf);
     if (!winsetaddr(w, buf, 1))
         return 0;
 
@@ -111,7 +111,7 @@ int markplay(Window *w, ulong q0) {
         w->data = winopenfile(w, "data");
 
     sprint(buf, "#%lud", q0);
-    DPRINT(2, "addr %s\n", buf);
+    LOG(2, "addr %s\n", buf);
     if (!winsetaddr(w, buf, 1) || !winsetaddr(w, "-0", 1))
         return 0;
     if (write(w->data, INITSTRING, strlen(INITSTRING)) != strlen(INITSTRING))
@@ -198,31 +198,31 @@ void advancetrack(Drive *d, Window *w) {
 
     q0 = q1 = 0;
     if (!unmarkplay(w, buf, sizeof(buf), &q0, &q1, &qnext)) {
-        DPRINT(2, "unmark: %r\n");
+        LOG(2, "unmark: %r\n");
         return;
     }
 
-    DPRINT(2, "buf: %s\n", buf);
+    LOG(2, "buf: %s\n", buf);
     if (strncmp(buf, "repeat", 6) == 0) {
         if (!winsetaddr(w, "#0", 1) || !findplay(w, "/^[0-9]+\\/", &qnext, NULL)) {
-            DPRINT(2, "set/find: %r\n");
+            LOG(2, "set/find: %r\n");
             return;
         }
         if (w->data < 0)
             w->data = winopenfile(w, "data");
         if ((n = read(w->data, buf, sizeof(buf) - 1)) <= 0) {
-            DPRINT(2, "read %d: %r\n", n);
+            LOG(2, "read %d: %r\n", n);
             return;
         }
         buf[n] = 0;
-        DPRINT(2, "buf: %s\n", buf);
+        LOG(2, "buf: %s\n", buf);
     }
 
     if ((n = atoi(buf)) == 0)
         return;
 
     if (!markplay(w, qnext))
-        DPRINT(2, "err: %r");
+        LOG(2, "err: %r");
 
     playtrack(d, n - 1, n - 1);
 }
@@ -275,7 +275,7 @@ void acmeevent(Drive *d, Window *w, Event *e) {
             }
             /* if it's a known command, do it */
             /* if it's a long message, it can't be for us anyway */
-            DPRINT(2, "exec: %s\n", s);
+            LOG(2, "exec: %s\n", s);
             if (!cdcommand(w, d, s)) /* send it back */
                 winwriteevent(w, e);
             if (na)
@@ -296,9 +296,9 @@ void acmeevent(Drive *d, Window *w, Event *e) {
                 winread(w, eq->q0, eq->q1, buf);
                 s = buf;
             }
-            DPRINT(2, "load %s\n", s);
+            LOG(2, "load %s\n", s);
             if ((n = atoi(s)) != 0) {
-                DPRINT(2, "mark %d\n", n);
+                LOG(2, "mark %d\n", n);
                 q0 = q1 = 0;
                 unmarkplay(w, NULL, 0, &q0, &q1, NULL);
 
@@ -308,7 +308,7 @@ void acmeevent(Drive *d, Window *w, Event *e) {
                     eq->q1 -= (q1 - q0);
                 }
                 if (!markplay(w, eq->q0))
-                    DPRINT(2, "err: %r\n");
+                    LOG(2, "err: %r\n");
 
                 playtrack(d, n - 1, n - 1);
             } else
