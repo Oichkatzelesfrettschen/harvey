@@ -14,4 +14,7 @@ jobs:
       - name: Install dependencies
         run: ./setup.sh
       - run: make all CFLAGS+=' -std=c17 -Wall -Wextra -Wpedantic -Werror'
+      - name: Compile acd sources
+        run: clang -std=c17 $(find acme/bin/source/acd -name '*.c') \
+            -Iacme/bin/source/acd -o /tmp/acd
       - run: clang-tidy --config-file=clang-tidy.config $(find . -name '*.c' -o -name '*.h') -- -std=c17
