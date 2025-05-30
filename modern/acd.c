@@ -1,4 +1,5 @@
-#include "args.h"
+/* Example CD player skeleton using modern threading primitives. */
+#include "args.h" /* command line parser */
 #include "msf.h"
 #include "spinlock.h"
 #include <stdbool.h>
@@ -7,8 +8,7 @@
 
 int main(int argc, char **argv) {
     CmdArgs args = parse_args((int32_t)argc, argv);
-    printf("C23 acd skeleton running on device %s. Verbose=%d\n", args.device,
-           (int)args.verbose);
+    printf("C23 acd skeleton running on device %s. Verbose=%d\n", args.device, (int)args.verbose);
 
     /* Example use of the recursive spinlock. */
     Spinlock lock;

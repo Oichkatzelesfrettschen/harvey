@@ -1,18 +1,18 @@
 # Modernization Plan
 
-This document outlines the high level tasks required to refactor the Harvey utilities to modern C23, C++23 and portable assembly.
+This document outlines the high level tasks required to refactor the Harvey utilities to modern C17, C++17 and portable assembly.
 
-## C23 Migration
+## C17 Migration
 
 - Audit existing C sources for deprecated constructs and Plan 9 specific extensions.
-- Introduce a portable build system using clang with `-std=c23`.
+- Introduce a portable build system using clang with `-std=c17`.
 - Enable compiler warnings for portability issues and adopt clang-tidy modernize checks.
 
-## C++23 Components
+## C++17 Components
 
 - Identify subsystems that would benefit from C++ abstractions, e.g. file handling or command line parsing.
 - Establish a minimal runtime environment compatible with both C and C++ utilities.
-- Compile C++ sources using `-std=c++23` and integrate with the existing makefiles.
+- Compile C++ sources using `-std=c++17` and integrate with the existing makefiles.
 
 ## Portable Assembly
 

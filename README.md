@@ -1,13 +1,18 @@
 # Harvey Build Instructions
 
 This repository contains a small subset of the Harvey OS utilities.
-The `.codex/setup.sh` script automatically installs the toolchains,
+The `./setup.sh` script automatically installs the toolchains,
 QEMU and the Bochs emulator along with other packages required for
 cross development. After the dependencies are installed run `make`
 to build the utilities under the `modern` directory.
 
+The setup script also installs additional packages for 32-bit
+cross compilation, Go tooling, and various utilities used by the
+CI workflows. These include `gcc-multilib`, `g++-multilib`, `rc`,
+`expect`, `go-dep`, `golang-go` and the `PyYAML` Python module.
+
 Before committing changes, run `pre-commit` to execute formatters and
-`clang-tidy` checks. The `.codex/setup.sh` script installs the required
+`clang-tidy` checks. The `./setup.sh` script installs the required
 tools and configures the git hook via `pre-commit install`.
 
 To boot a custom Harvey kernel without a graphical console you can use
