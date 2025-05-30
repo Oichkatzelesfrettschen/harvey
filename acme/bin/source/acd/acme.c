@@ -1,4 +1,5 @@
 #include "acd.h"
+#include <stdint.h>
 
 static int iscmd(char *s, char *cmd) {
     int len;
@@ -25,7 +26,7 @@ static char *skip(char *s, char *cmd) {
 
 /*
  * find the playing string, leave in addr
- * if q0, q1 are non-nil, set them to the addr of the string.
+ * if q0, q1 are non-NULL, set them to the addr of the string.
  */
 int findplay(Window *w, char *s, ulong *q0, ulong *q1) {
     char xbuf[25];
@@ -123,21 +124,21 @@ int cdcommand(Window *w, Drive *d, char *s) {
 
     if (iscmd(s, "Del")) {
         if (windel(w, 0))
-            threadexitsall(nil);
+            threadexitsall(NULL);
         return 1;
     }
     if (iscmd(s, "Stop")) {
-        unmarkplay(w, nil, 0, nil, nil, nil);
+        unmarkplay(w, NULL, 0, NULL, NULL, NULL);
         stop(d);
         return 1;
     }
     if (iscmd(s, "Eject")) {
-        unmarkplay(w, nil, 0, nil, nil, nil);
+        unmarkplay(w, NULL, 0, NULL, NULL, NULL);
         eject(d);
         return 1;
     }
     if (iscmd(s, "Ingest")) {
-        unmarkplay(w, nil, 0, nil, nil, nil);
+        unmarkplay(w, NULL, 0, NULL, NULL, NULL);
         ingest(d);
         return 1;
     }
@@ -202,7 +203,7 @@ void advancetrack(Drive *d, Window *w) {
 
     DPRINT(2, "buf: %s\n", buf);
     if (strncmp(buf, "repeat", 6) == 0) {
-        if (!winsetaddr(w, "#0", 1) || !findplay(w, "/^[0-9]+\\/", &qnext, nil)) {
+        if (!winsetaddr(w, "#0", 1) || !findplay(w, "/^[0-9]+\\/", &qnext, NULL)) {
             DPRINT(2, "set/find: %r\n");
             return;
         }
@@ -250,8 +251,8 @@ void acmeevent(Drive *d, Window *w, Event *e) {
         switch (e->c2) { /* type of action */
         case 'x':        /* mouse: button 2 in tag */
         case 'X':        /* mouse: button 2 in body */
-            ea = nil;
-            //	e2 = nil;
+            ea = NULL;
+            //	e2 = NULL;
             s = e->b;
             if (e->flag & 2) { /* null string with non-null expansion */
                 e2 = recvp(w->cevent);
@@ -282,7 +283,7 @@ void acmeevent(Drive *d, Window *w, Event *e) {
 
         case 'l': /* mouse: button 3 in tag */
         case 'L': /* mouse: button 3 in body */
-                  //	buf = nil;
+                  //	buf = NULL;
             eq = e;
             if (e->flag & 2) {
                 e2 = recvp(w->cevent);
@@ -298,7 +299,7 @@ void acmeevent(Drive *d, Window *w, Event *e) {
             if ((n = atoi(s)) != 0) {
                 DPRINT(2, "mark %d\n", n);
                 q0 = q1 = 0;
-                unmarkplay(w, nil, 0, &q0, &q1, nil);
+                unmarkplay(w, NULL, 0, &q0, &q1, NULL);
 
                 /* adjust eq->q* for deletion */
                 if (eq->q0 > q1) {

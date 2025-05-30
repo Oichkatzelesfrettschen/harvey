@@ -1,8 +1,9 @@
 #include "acd.h"
 #include <ctype.h>
+#include <stdint.h>
 
 /* see CDDBPROTO */
-static ulong cddb_sum(int n) {
+static uint32_t cddb_sum(int n) {
     int ret;
     ret = 0;
     while (n > 0) {
@@ -12,7 +13,7 @@ static ulong cddb_sum(int n) {
     return ret;
 }
 
-static ulong diskid(Toc *t) {
+static uint32_t diskid(Toc *t) {
     int i, n, tmp;
     Msf *ms, *me;
 
@@ -33,7 +34,7 @@ static ulong diskid(Toc *t) {
 
 static void append(char **d, char *s) {
     char *r;
-    if (*d == nil)
+    if (*d == NULL)
         *d = estrdup(s);
     else {
         r = emalloc(strlen(*d) + strlen(s) + 1);
@@ -63,7 +64,7 @@ static int cddbfilltoc(Toc *t) {
     }
     Binit(&bin, fd, OREAD);
 
-    if ((p = Brdline(&bin, '\n')) == nil || atoi(p) / 100 != 2) {
+    if ((p = Brdline(&bin, '\n')) == NULL || atoi(p) / 100 != 2) {
     died:
         close(fd);
         Bterm(&bin);
@@ -76,7 +77,7 @@ static int cddbfilltoc(Toc *t) {
     }
 
     fprint(fd, "cddb hello gre plan9 9cd 1.0\r\n");
-    if ((p = Brdline(&bin, '\n')) == nil || atoi(p) / 100 != 2)
+    if ((p = Brdline(&bin, '\n')) == NULL || atoi(p) / 100 != 2)
         goto died;
 
     fprint(fd, "cddb query %8.8lux %d", diskid(t), t->ntrack);
@@ -90,7 +91,7 @@ static int cddbfilltoc(Toc *t) {
     fprint(fd, " %d\r\n", m->m * 60 + m->s);
     DPRINT(2, " %d\r\n", m->m * 60 + m->s);
 
-    if ((p = Brdline(&bin, '\n')) == nil || atoi(p) / 100 != 2)
+    if ((p = Brdline(&bin, '\n')) == NULL || atoi(p) / 100 != 2)
         goto died;
     p[Blinelen(&bin) - 1] = 0;
     DPRINT(2, "cddb: %s\n", p);
@@ -106,7 +107,7 @@ static int cddbfilltoc(Toc *t) {
         id = f[2];
         break;
     case 211: /* close matches */
-        if ((p = Brdline(&bin, '\n')) == nil)
+        if ((p = Brdline(&bin, '\n')) == NULL)
             goto died;
         if (p[0] == '.') /* no close matches? */
             goto died;
@@ -121,7 +122,7 @@ static int cddbfilltoc(Toc *t) {
 
         /* snarf rest of buffer */
         while (p[0] != '.') {
-            if ((p = Brdline(&bin, '\n')) == nil)
+            if ((p = Brdline(&bin, '\n')) == NULL)
                 goto died;
             p[Blinelen(&bin) - 1] = '\0';
             DPRINT(2, "cddb: %s\n", p);
@@ -138,7 +139,7 @@ static int cddbfilltoc(Toc *t) {
     memset(gottrack, 0, sizeof(gottrack));
     gottitle = 0;
     do {
-        if ((p = Brdline(&bin, '\n')) == nil)
+        if ((p = Brdline(&bin, '\n')) == NULL)
             goto died;
         q = p + Blinelen(&bin) - 1;
         while (isspace(*q))

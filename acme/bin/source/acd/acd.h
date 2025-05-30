@@ -1,17 +1,29 @@
-#ifdef USE_POSIX_THREADS
-#include "../../../../modern/plan9_compat.h"
-#else
-#include <9p.h>
-#include <auth.h>
-#include <bio.h>
-#include <disk.h>
-#include <fcall.h>
-#include <libc.h>
-#include <thread.h>
-#include <u.h>
-#endif
+#pragma once
+
+/*
+ * C17 header for the acd utility.  The original Plan9 dependencies
+ * have been removed and replaced with forward declarations and
+ * standard C headers so the code can be compiled as freestanding
+ * C17.
+ */
+
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdio.h>
+
+/* Forward declarations for Plan9 types that the old code relied on. */
+typedef struct Biobuf Biobuf;
+typedef struct Channel Channel;
+typedef struct Scsi Scsi;
+
+/* Simple stand-ins for historical Plan9 types. */
+typedef unsigned long ulong;
+typedef uint32_t uint;
 
 /* acme */
+typedef struct Fmt Fmt; /* Formatting context placeholder */
+typedef uint32_t Rune;  /* UTF-8 rune */
+
 typedef struct Event Event;
 typedef struct Window Window;
 
@@ -29,8 +41,8 @@ struct Event {
     int flag;
     int nb;
     int nr;
-    char b[EVENTSIZE * UTFmax + 1];
-    Rune r[EVENTSIZE + 1];
+    char b[EVENTSIZE * 4 + 1]; /* UTF-8 bytes */
+    Rune r[EVENTSIZE + 1];     /* Rune data */
 };
 
 struct Window {
@@ -112,10 +124,6 @@ struct Toc {
 };
 
 extern int msfconv(Fmt *);
-
-#pragma varargck argpos error 1
-#pragma varargck argpos ctlprint 2
-#pragma varargck type "M" Msf
 
 enum { /* state */
        Sunknown,

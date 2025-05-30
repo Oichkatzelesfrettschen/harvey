@@ -1,4 +1,5 @@
 #include "acd.h"
+#include <stdint.h>
 
 int debug;
 
@@ -41,7 +42,7 @@ void eventwatcher(Drive *d) {
     alts[TOCDISP] = mkalt(d->ctocdisp, &nt, CHANRCV);
     alts[DBREQ] = mkalt(d->cdbreq, &tdb, CHANNOP);
     alts[DBREPLY] = mkalt(d->cdbreply, &nt, CHANRCV);
-    alts[NALT] = mkalt(nil, nil, CHANEND);
+    alts[NALT] = mkalt(NULL, NULL, CHANEND);
     for (;;) {
         switch (alt(alts)) {
         case STATUS:
@@ -98,11 +99,11 @@ void threadmain(int argc, char **argv) {
 
     fmtinstall('M', msfconv);
 
-    if ((s = openscsi(argv[0])) == nil)
+    if ((s = openscsi(argv[0])) == NULL)
         error("opening scsi: %r");
 
     d = malloc(sizeof(*d));
-    if (d == nil)
+    if (d == NULL)
         error("out of memory");
     memset(d, 0, sizeof d);
 

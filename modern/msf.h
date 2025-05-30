@@ -1,5 +1,4 @@
-#ifndef HARVEY_MSF_H
-#define HARVEY_MSF_H
+#pragma once
 
 #include <stdint.h>
 
@@ -10,7 +9,6 @@ typedef struct {
     int32_t s;
     int32_t f;
 } Msf;
-
 
 enum {
     MSF_SECS_PER_MIN = 60,
@@ -25,5 +23,3 @@ static inline Msf msf_from_frames(uint32_t frames) {
     msf.f = (int32_t)(frames % MSF_FRAMES_PER_SEC);
     return msf;
 }
-
-#endif /* HARVEY_MSF_H */

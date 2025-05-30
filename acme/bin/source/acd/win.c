@@ -1,4 +1,5 @@
 #include "acd.h"
+#include <stdint.h>
 
 Window *newwindow(void) {
     char buf[12];
@@ -12,18 +13,18 @@ Window *newwindow(void) {
     w->id = atoi(buf);
     w->event = winopenfile(w, "event");
     w->addr = -1; /* will be opened when needed */
-    w->body = nil;
+    w->body = NULL;
     w->data = -1;
     w->cevent = chancreate(sizeof(Event *), 0);
-    if (w->cevent == nil)
-        error("cevent is nil: %r");
+    if (w->cevent == NULL)
+        error("cevent is NULL: %r");
     return w;
 }
 
 void winsetdump(Window *w, char *dir, char *cmd) {
-    if (dir != nil)
+    if (dir != NULL)
         ctlprint(w->ctl, "dumpdir %s\n", dir);
-    if (cmd != nil)
+    if (cmd != NULL)
         ctlprint(w->ctl, "dump %s\n", cmd);
 }
 
@@ -70,19 +71,19 @@ void winopenbody(Window *w, int mode) {
 
     sprint(buf, "/mnt/wsys/%d/body", w->id);
     w->body = Bopen(buf, mode | OCEXEC);
-    if (w->body == nil)
+    if (w->body == NULL)
         error("can't open window body file: %r");
 }
 
 void winclosebody(Window *w) {
-    if (w->body != nil) {
+    if (w->body != NULL) {
         Bterm(w->body);
-        w->body = nil;
+        w->body = NULL;
     }
 }
 
 void winwritebody(Window *w, char *s, int n) {
-    if (w->body == nil)
+    if (w->body == NULL)
         winopenbody(w, OWRITE);
     if (Bwrite(w->body, s, n) != n)
         error("write error to window: %r");
@@ -94,7 +95,7 @@ int wingetec(Window *w) {
         if (w->nbuf <= 0) {
             /* probably because window has exited, and only called by wineventproc, so just shut
              * down */
-            threadexits(nil);
+            threadexits(NULL);
         }
         w->bufp = w->buf;
     }
@@ -202,9 +203,9 @@ void windormant(Window *w) {
         close(w->addr);
         w->addr = -1;
     }
-    if (w->body != nil) {
+    if (w->body != NULL) {
         Bterm(w->body);
-        w->body = nil;
+        w->body = NULL;
     }
     if (w->data >= 0) {
         close(w->data);
@@ -257,10 +258,10 @@ char *winreadbody(Window *w,
     char *s;
     int m, na, n;
 
-    if (w->body != nil)
+    if (w->body != NULL)
         winclosebody(w);
     winopenbody(w, OREAD);
-    s = nil;
+    s = NULL;
     na = 0;
     n = 0;
     for (;;) {

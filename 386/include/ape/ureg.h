@@ -1,10 +1,8 @@
-#ifndef __UREG_H
-#define __UREG_H
-#if !defined(_PLAN9_SOURCE)
-This header file is an extension to ANSI / POSIX
-#endif
 
-    struct Ureg {
+#pragma once
+#include <stdint.h>
+
+struct Ureg {
     unsigned long di; /* general registers */
     unsigned long si; /* ... */
     unsigned long bp; /* ... */
@@ -28,5 +26,3 @@ This header file is an extension to ANSI / POSIX
     };
     unsigned long ss; /* old stack segment */
 };
-
-#endif
