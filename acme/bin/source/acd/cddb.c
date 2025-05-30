@@ -1,5 +1,6 @@
 #include "acd.h"
 #include <ctype.h>
+#include <errno.h>
 #include <stdint.h>
 
 /* see CDDBPROTO */
@@ -49,7 +50,7 @@ static int cddbfilltoc(Toc *t) {
     int fd;
     int i;
     char *p, *q;
-    Biobuf bin;
+    FILE *bin; /* buffered connection */
     Msf *m;
     char *f[10];
     int nf;
@@ -59,43 +60,51 @@ static int cddbfilltoc(Toc *t) {
 
     fd = dial("tcp!freedb.freedb.org!888", 0, 0, 0);
     if (fd < 0) {
-        fprint(2, "cannot dial: %r\n");
+        fprintf(stderr, "cannot dial: %s\n", strerror(errno));
         return -1;
     }
-    Binit(&bin, fd, OREAD);
-
-    if ((p = Brdline(&bin, '\n')) == NULL || atoi(p) / 100 != 2) {
-    died:
+    /* turn the fd into a FILE for buffered IO */
+    bin = fdopen(fd, "r+");
+    if (bin == NULL) {
+        perror("fdopen");
         close(fd);
-        Bterm(&bin);
-        fprint(2, "error talking to server\n");
-        if (p) {
-            p[Blinelen(&bin) - 1] = 0;
-            fprint(2, "server says: %s\n", p);
+        return -1;
+    }
+
+    char line[512];
+    if (fgets(line, sizeof(line), bin) == NULL || atoi(line) / 100 != 2) {
+    died:
+        fclose(bin);
+        fprintf(stderr, "error talking to server\n");
+        if (line[0] != '\0') {
+            line[strcspn(line, "\n")] = '\0';
+            fprintf(stderr, "server says: %s\n", line);
         }
         return -1;
     }
 
-    fprint(fd, "cddb hello gre plan9 9cd 1.0\r\n");
-    if ((p = Brdline(&bin, '\n')) == NULL || atoi(p) / 100 != 2)
+    fprintf(bin, "cddb hello gre plan9 9cd 1.0\r\n");
+    fflush(bin);
+    if (fgets(line, sizeof(line), bin) == NULL || atoi(line) / 100 != 2)
         goto died;
 
-    fprint(fd, "cddb query %8.8lux %d", diskid(t), t->ntrack);
+    fprintf(bin, "cddb query %8.8lux %d", diskid(t), t->ntrack);
     DPRINT(2, "cddb query %8.8lux %d", diskid(t), t->ntrack);
     for (i = 0; i < t->ntrack; i++) {
         m = &t->track[i].start;
-        fprint(fd, " %d", (m->m * 60 + m->s) * 75 + m->f);
+        fprintf(bin, " %d", (m->m * 60 + m->s) * 75 + m->f);
         DPRINT(2, " %d", (m->m * 60 + m->s) * 75 + m->f);
     }
     m = &t->track[t->ntrack - 1].end;
-    fprint(fd, " %d\r\n", m->m * 60 + m->s);
+    fprintf(bin, " %d\r\n", m->m * 60 + m->s);
     DPRINT(2, " %d\r\n", m->m * 60 + m->s);
 
-    if ((p = Brdline(&bin, '\n')) == NULL || atoi(p) / 100 != 2)
+    fflush(bin);
+    if (fgets(line, sizeof(line), bin) == NULL || atoi(line) / 100 != 2)
         goto died;
-    p[Blinelen(&bin) - 1] = 0;
-    DPRINT(2, "cddb: %s\n", p);
-    nf = tokenize(p, f, nelem(f));
+    line[strcspn(line, "\n")] = '\0';
+    DPRINT(2, "cddb: %s\n", line);
+    nf = tokenize(line, f, nelem(f));
     if (nf < 1)
         goto died;
 
@@ -107,25 +116,25 @@ static int cddbfilltoc(Toc *t) {
         id = f[2];
         break;
     case 211: /* close matches */
-        if ((p = Brdline(&bin, '\n')) == NULL)
+        if (fgets(line, sizeof(line), bin) == NULL)
             goto died;
-        if (p[0] == '.') /* no close matches? */
+        if (line[0] == '.') /* no close matches? */
             goto died;
-        p[Blinelen(&bin) - 1] = '\0';
+        line[strcspn(line, "\n")] = '\0';
 
         /* accept first match */
-        nf = tokenize(p, f, nelem(f));
+        nf = tokenize(line, f, nelem(f));
         if (nf < 2)
             goto died;
         categ = f[0];
         id = f[1];
 
         /* snarf rest of buffer */
-        while (p[0] != '.') {
-            if ((p = Brdline(&bin, '\n')) == NULL)
+        while (line[0] != '.') {
+            if (fgets(line, sizeof(line), bin) == NULL)
                 goto died;
-            p[Blinelen(&bin) - 1] = '\0';
-            DPRINT(2, "cddb: %s\n", p);
+            line[strcspn(line, "\n")] = '\0';
+            DPRINT(2, "cddb: %s\n", line);
         }
         break;
     case 202: /* no match */
@@ -134,28 +143,29 @@ static int cddbfilltoc(Toc *t) {
     }
 
     /* fetch results for this cd */
-    fprint(fd, "cddb read %s %s\r\n", categ, id);
+    fprintf(bin, "cddb read %s %s\r\n", categ, id);
+    fflush(bin);
 
     memset(gottrack, 0, sizeof(gottrack));
     gottitle = 0;
     do {
-        if ((p = Brdline(&bin, '\n')) == NULL)
+        if (fgets(line, sizeof(line), bin) == NULL)
             goto died;
-        q = p + Blinelen(&bin) - 1;
-        while (isspace(*q))
+        q = line + strlen(line) - 1;
+        while (isspace((unsigned char)*q))
             *q-- = 0;
-        DPRINT(2, "cddb %s\n", p);
-        if (strncmp(p, "DTITLE=", 7) == 0) {
+        DPRINT(2, "cddb %s\n", line);
+        if (strncmp(line, "DTITLE=", 7) == 0) {
             if (gottitle)
-                append(&t->title, p + 7);
+                append(&t->title, line + 7);
             else
-                t->title = estrdup(p + 7);
+                t->title = estrdup(line + 7);
             gottitle = 1;
-        } else if (strncmp(p, "TTITLE", 6) == 0 && isdigit(p[6])) {
-            i = atoi(p + 6);
+        } else if (strncmp(line, "TTITLE", 6) == 0 && isdigit(line[6])) {
+            i = atoi(line + 6);
             if (i < t->ntrack) {
-                p += 6;
-                while (isdigit(*p))
+                p = line + 6;
+                while (isdigit((unsigned char)*p))
                     p++;
                 if (*p == '=')
                     p++;
@@ -167,11 +177,10 @@ static int cddbfilltoc(Toc *t) {
                 gottrack[i] = 1;
             }
         }
-    } while (*p != '.');
+    } while (*line != '.');
 
-    fprint(fd, "quit\r\n");
-    close(fd);
-    Bterm(&bin);
+    fprintf(bin, "quit\r\n");
+    fclose(bin);
 
     return 0;
 }

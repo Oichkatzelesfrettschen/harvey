@@ -12,7 +12,6 @@
 #include <stdio.h>
 
 /* Forward declarations for Plan9 types that the old code relied on. */
-typedef struct Biobuf Biobuf;
 typedef struct Channel Channel;
 typedef struct Scsi Scsi;
 
@@ -51,7 +50,7 @@ struct Window {
     int event;
     int addr;
     int data;
-    Biobuf *body;
+    FILE *body; /* buffered body file */
 
     /* event input */
     char buf[512];
@@ -165,7 +164,7 @@ extern int debug;
 
 #define DPRINT                                                                                     \
     if (debug)                                                                                     \
-    fprint
+        fprintf(stderr,
 void acmeevent(Drive *, Window *, Event *);
 
 int playtrack(Drive *, int, int);

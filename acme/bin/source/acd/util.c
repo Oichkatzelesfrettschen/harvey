@@ -54,7 +54,7 @@ void error(char *fmt, ...) {
     va_list arg;
     char buf[256];
 
-    fprint(2, "Mail: ");
+    fprintf(stderr, "Mail: ");
     va_start(arg, fmt);
     n = vsnprint(buf, sizeof buf, fmt, arg);
     va_end(arg);
