@@ -27,3 +27,22 @@ This document outlines the high level tasks required to refactor the Harvey util
 - Use `pre-commit` to run clang-format, clang-tidy and build checks.
 - Update the build scripts in `modern/` to handle both C and C++ sources.
 
+## Final thread and I/O approach
+
+The modern code base no longer relies on the Plan 9 threading model.  All
+concurrency uses POSIX `pthread` calls and the temporary
+`modern/plan9_compat.h` wrapper has been removed.  File operations and
+buffer management have been rewritten around standard C and POSIX
+functions.  The optional APEX layer may still be used for additional
+POSIX tooling but is not required for building `acd`.
+
+### Building
+
+Compile the utilities with a normal host compiler:
+
+```bash
+make -C modern
+```
+
+Only clang or gcc is needed; no Plan 9 libraries or cross toolchains are
+required.
