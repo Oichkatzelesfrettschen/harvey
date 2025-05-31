@@ -33,3 +33,22 @@ work; it does not perfectly reproduce Plan 9 semantics.  A full port
 would replace the channel based concurrency with standard POSIX queues or
 other C23 facilities.
 
+## Final thread and I/O model
+
+After completing the modernization, the temporary Plan 9 compatibility
+wrapper was removed.  All concurrency now uses POSIX `pthread` calls
+directly and `modern/plan9_compat.h` no longer exists.  I/O routines were
+rewritten to rely solely on standard C and POSIX interfaces such as
+`open`, `read`, `write`, `fopen` and `fread`.  No Plan 9 headers remain in
+the build.
+
+Build the updated sources with any modern C toolchain:
+
+```bash
+cd modern
+make
+```
+
+The build system requires only clang or gcc and does not depend on any
+Plan 9 libraries or shims.
+
