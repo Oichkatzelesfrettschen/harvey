@@ -11,17 +11,23 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - arch: amd64
+          - arch: x86_64 # Explicitly using x86_64 for clarity
             cflags: ""
           - arch: i386
             cflags: "-m32"
+          - arch: arm64
+            cflags: "" # modern/Makefile handles arm64 compiler and flags
+
     steps:
       - uses: actions/checkout@v3
       - name: Install dependencies
-        run: ./setup.sh
+        run: ./setup.sh # This script should install gcc-multilib for i386 and aarch64-linux-gnu-gcc for arm64
+
       - name: Build
-        run: make CFLAGS="${{ matrix.cflags }}"
+        run: make ARCH=${{ matrix.arch }} CFLAGS="${{ matrix.cflags }}"
+
       - uses: pre-commit/action@v3.0.0
+
       - name: clang-tidy
         run: |
           clang-tidy --config-file=clang-tidy.config $(find . -name '*.c' -o -name '*.h') -- -std=c17 ${{ matrix.cflags }}

@@ -1,6 +1,6 @@
 # Root Makefile to drive builds in the modern directory
 ARCH ?= x86_64
-ARCHS ?= i386 x86_64
+ARCHS ?= i386 x86_64 arm64
 CC ?= clang
 CXX ?= clang++
 CFLAGS ?= -std=c17 -Wall -Wextra -Wpedantic -Werror
