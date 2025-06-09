@@ -3,22 +3,30 @@
 #include <stdatomic.h>
 #include <threads.h>
 
-/*
- * Simple recursive spinlock. The lock can be acquired multiple times by the
- * owning thread. The depth field tracks the recursion count and the owner field
- * stores the thread that currently holds the lock.
+/**
+ * @brief Simple recursive spinlock.
+ *
+ * The lock may be acquired multiple times by the owning thread. @c depth
+ * tracks recursion count while @c owner identifies the thread currently
+ * holding the lock.
  */
 typedef struct {
-    atomic_flag flag; /* underlying spin primitive */
-    thrd_t owner;     /* thread currently holding the lock */
-    int depth;        /* recursion count */
+    atomic_flag flag; /**< Underlying spin primitive. */
+    thrd_t owner;     /**< Thread currently holding the lock. */
+    int depth;        /**< Recursion count. */
 } Spinlock;
 
-/* Initialize a Spinlock structure to an unlocked state. */
+/**
+ * @brief Initialize a spinlock structure to the unlocked state.
+ */
 void spinlock_init(Spinlock *lock);
 
-/* Acquire the spinlock, blocking until it becomes available. */
+/**
+ * @brief Acquire the spinlock, blocking until available.
+ */
 void spinlock_acquire(Spinlock *lock);
 
-/* Release a previously acquired spinlock. */
+/**
+ * @brief Release a previously acquired spinlock.
+ */
 void spinlock_release(Spinlock *lock);
