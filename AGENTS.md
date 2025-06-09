@@ -8,6 +8,7 @@ All code modifications must embrace modern programming paradigms and idiomatic e
 - Factor out shared logic so each function has a single responsibility.
 - Ensure all functions carry Doxygen comments documenting parameters, return values and side effects.
 - Adopt the most modern language features available for the file's language standard.
+- Decompose complex algorithms and re-synthesize them using modern idiomatic patterns grounded in mathematical principles.
 
 Additionally, keep code formatting clean and consistent. Use `clang-format` or
 equivalent tooling where applicable. Install the git hooks with
