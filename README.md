@@ -11,10 +11,17 @@ cross compilation, Go tooling, and various utilities used by the
 CI workflows. These include `gcc-multilib`, `g++-multilib`, `rc`,
 `expect`, `go-dep`, `golang-go` and the `PyYAML` Python module.
 
+The setup script installs `pre-commit` so you can run the hooks locally.
+After running the setup script, execute `pre-commit install` to add the git
+hooks. Run `pre-commit` in the repository root before pushing changes to
+ensure all configured checks pass. The hooks invoke `shellcheck` for shell
+scripts and automatically generate `compile_commands.json` using
+`compiledb`.
+
 Before committing changes, run `pre-commit` or rely on the CI workflow
 which executes all hooks using the `pre-commit` GitHub action. The
-pipeline installs additional utilities such as `compiledb` and
-`configuredb`.
+pipeline installs additional utilities such as `compiledb`,
+`configuredb` and `shellcheck`.
 
 To boot a custom Harvey kernel without a graphical console you can use
 `qemu-nox` via the helper script in `scripts/run_qemu_nox.sh`:
@@ -40,3 +47,14 @@ make ARCH=i8086    # experimental 16-bit build
 
 Use `make test` to compile all entries defined in the `ARCHS` variable
 (defaults to `i386 x86_64`).
+
+## Documentation
+
+Doxygen extracts API references for all C sources. Run `doxygen docs/Doxyfile` to
+generate XML output consumed by Sphinx. To build the HTML manual, execute:
+
+```bash
+sphinx-build -b html docs docs/_build
+```
+
+The resulting pages in `docs/_build` can be viewed with any browser.

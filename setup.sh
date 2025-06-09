@@ -57,8 +57,13 @@ REQUIRED_PACKAGES=(
   git
   python3
   python3-pip
+  pre-commit
   python3-yaml
+  python3-sphinx
+  python3-breathe
+  python3-sphinx-rtd-theme
   shellcheck
+  cloc
   graphviz
   doxygen
   compiledb
@@ -81,6 +86,8 @@ REQUIRED_PACKAGES+=(
   qemu
   qemu-system-x86
   qemu-utils
+  qemu-nox
+  tmux
   bochs
 )
 
