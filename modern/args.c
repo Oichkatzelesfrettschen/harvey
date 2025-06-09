@@ -18,9 +18,8 @@ static void usage(void) {
  * The @c -v flag enables verbose output and the device name is taken from the
  * first positional argument.
  *
- * @param argc Argument count.
- * @param argv Argument vector.
- * @return Parsed arguments structure.
+ * This function consumes the traditional @p argc and @p argv parameters
+ * supplied to @c main and returns the parsed options structure.
  */
 CmdArgs parse_args(int32_t argc, char **argv) {
     CmdArgs args = {.verbose = false, .device = NULL};

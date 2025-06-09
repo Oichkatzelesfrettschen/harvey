@@ -50,11 +50,12 @@ Use `make test` to compile all entries defined in the `ARCHS` variable
 
 ## Documentation
 
-Doxygen extracts API references for all C sources. Run `doxygen docs/Doxyfile` to
-generate XML output consumed by Sphinx. To build the HTML manual, execute:
+Run `doxygen docs/Doxyfile` to extract API references from all C sources.  The
+XML output is written to `build/docs/xml` and consumed by Sphinx.  Build the
+HTML manual with:
 
 ```bash
-sphinx-build -b html docs docs/_build
+sphinx-build -b html docs build/sphinx
 ```
 
 The resulting pages in `docs/_build` can be viewed with any browser.
