@@ -13,7 +13,7 @@ jobs:
           path: "**/*.{c,h}"
       - name: Install dependencies
         run: ./setup.sh
-      - run: make all CFLAGS+=' -std=c17 -Wall -Wextra -Wpedantic -Werror'
+      - run: make all CFLAGS+=' -O3 -march=native -mtune=native -pipe -fPIC -std=c17 -Wall -Wextra -Wpedantic -Werror'
       - name: Compile acd sources
         run: clang -std=c17 $(find acme/bin/source/acd -name '*.c') \
             -Iacme/bin/source/acd -o /tmp/acd

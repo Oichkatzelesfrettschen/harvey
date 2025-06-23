@@ -63,3 +63,18 @@ To build for all architectures defined in the `ARCHS` variable in the Makefile (
 make test
 ```
 This is primarily used by the CI system.
+
+## Build Flags
+
+The `setup.sh` script configures optimized compiler flags for local builds by
+exporting the variables `CFLAGS`, `CXXFLAGS` and `LDFLAGS`.  The defaults are:
+
+```bash
+CFLAGS="-O3 -march=native -mtune=native -pipe -fPIC"
+CXXFLAGS="-O3 -march=native -mtune=native -pipe -fPIC"
+LDFLAGS="-fuse-ld=lld"
+```
+
+Override them when invoking `make` if alternate flags are desired.  The CI
+workflows rely on these same defaults to ensure consistent builds across
+architectures.

@@ -12,11 +12,11 @@ jobs:
       matrix:
         include:
           - arch: x86_64 # Explicitly using x86_64 for clarity
-            cflags: ""
+            cflags: "-O3 -march=native -mtune=native -pipe -fPIC"
           - arch: i386
-            cflags: "-m32"
+            cflags: "-m32 -O2 -pipe -fPIC"
           - arch: arm64
-            cflags: "" # modern/Makefile handles arm64 compiler and flags
+            cflags: "-O3 -pipe -fPIC" # modern/Makefile handles arm64 compiler and flags
 
     steps:
       - uses: actions/checkout@v3
