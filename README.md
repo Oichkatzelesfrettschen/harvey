@@ -7,9 +7,11 @@ cross development. After the dependencies are installed run `make`
 to build the utilities under the `modern` directory.
 
 The setup script also installs additional packages for 32-bit
-cross compilation, Go tooling, and various utilities used by the
-CI workflows. These include `gcc-multilib`, `g++-multilib`, `rc`,
-`expect`, `go-dep`, `golang-go` and the `PyYAML` Python module.
+cross compilation, debugging utilities, and Go tooling used by
+the CI workflows. These include `gcc-multilib`, `g++-multilib`, `rc`,
+`expect`, the `linux-tools` package (providing `perf`), `golang-go`
+and the `PyYAML` Python module. The Go dependency manager `dep`
+is installed separately via `go install`.
 
 The setup script installs `pre-commit` so you can run the hooks locally.
 After running the setup script, execute `pre-commit install` to add the git
@@ -47,6 +49,20 @@ make ARCH=i8086    # experimental 16-bit build
 
 Use `make test` to compile all entries defined in the `ARCHS` variable
 (defaults to `i386 x86_64`).
+
+## Build Flags
+
+Running `setup.sh` exports a set of optimized compiler flags.  The variables
+`CFLAGS` and `CXXFLAGS` default to `-O3 -march=native -mtune=native -pipe -fPIC`
+while `LDFLAGS` defaults to `-fuse-ld=lld`.  Override them when invoking
+`make` if different flags are required:
+
+```bash
+CFLAGS='-O2 -g' make
+```
+
+These defaults are also used by the CI workflows so local builds match the
+automated tests.
 
 ## Documentation
 

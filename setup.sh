@@ -13,6 +13,13 @@ touch "$LOG_FILE" "$FAIL_LOG"
 
 exec > >(tee -a "$LOG_FILE") 2>&1
 
+## \brief Configure default build flags if not already set.
+set_build_flags() {
+  export CFLAGS="${CFLAGS:--O3 -march=native -mtune=native -pipe -fPIC}"
+  export CXXFLAGS="${CXXFLAGS:--O3 -march=native -mtune=native -pipe -fPIC}"
+  export LDFLAGS="${LDFLAGS:--fuse-ld=lld}"
+}
+
 ## \brief Update apt repositories and upgrade packages.
 update_system() {
   apt-get update -y || echo "apt-get update failed" >> "$FAIL_LOG"
@@ -63,7 +70,10 @@ install_npm_packages() {
 
 ## \brief Install Go tools using go install.
 install_go_packages() {
-  local pkgs=(harvey-os.org/cmd/ufs@latest)
+  local pkgs=(
+    harvey-os.org/cmd/ufs@latest
+    github.com/golang/dep/cmd/dep@latest
+  )
   for pkg in "${pkgs[@]}"; do
     GOPATH=${GOPATH:-$HOME/go} go install "$pkg" || echo "go install $pkg failed" >> "$FAIL_LOG"
   done
@@ -80,14 +90,16 @@ finalize() {
 }
 
 update_system
+set_build_flags
 
 REQUIRED_PACKAGES=(
   apt-utils apt-transport-https
   build-essential clang clang-tidy clang-format make git
   python3 python3-pip pre-commit python3-yaml python3-sphinx
   python3-breathe python3-sphinx-rtd-theme shellcheck cloc graphviz doxygen
-  compiledb configuredb llvm lld coq isabelle capnproto gcc-multilib g++-multilib
-  rc expect go-dep golang-go gdb gdbserver valgrind strace ltrace perf lsof htop
+  compiledb llvm lld coq isabelle capnproto gcc-multilib g++-multilib
+  rc expect go-dep golang-go gdb gdbserver valgrind strace ltrace \
+  linux-tools-common linux-tools-generic lsof htop
   dstat afl++ zzuf radamsa ccache lcov binutils binutils-aarch64-linux-gnu
   binutils-x86-64-linux-gnu gcc-aarch64-linux-gnu g++-aarch64-linux-gnu nodejs npm
   qemu qemu-system-x86 qemu-system-arm qemu-utils qemu-nox tmux bochs
