@@ -1,5 +1,12 @@
 # Build Instructions for Modern Utilities
 
+**IMPORTANT NOTICE:** This document provides specific build steps for the utilities in `modern/`. For the overarching architectural vision, CI strategy, and modernization protocols for Harvey OS, please refer to:
+*   `docs/architectural-manifesto.md`
+*   `docs/ci-strategy.md`
+*   `docs/systematic-modernization.md`
+
+The build system for `modern/` utilities has been refactored. While the commands below (using `make ARCH=...` from the root directory) remain valid, the `modern/Makefile` itself now uses the `TARGET_ARCH` variable, and architecture-specific settings (like compiler flags and toolchains) are defined in files within the `mk/arch/` directory (e.g., `mk/arch/x86_64.mk`, `mk/arch/arm64.mk`).
+
 This document describes how to build the modern C utilities located in the `modern/` directory.
 
 ## Supported Architectures
@@ -56,7 +63,7 @@ To build for a specific architecture, use the `ARCH` variable:
     make ARCH=arm64
     ```
     This will produce `modern/acd-arm64`.
-    *(Note: Requires `aarch64-linux-gnu-gcc` or an equivalent ARM64 cross-compiler to be in your PATH and recognized by the build system via the `CC_ARM64` variable in `modern/Makefile`.)*
+    *(Note: Requires an ARM64 cross-compiler like `aarch64-linux-gnu-gcc`. The specific compiler is now defined in `mk/arch/arm64.mk` and should be in your PATH.)*
 
 To build for all architectures defined in the `ARCHS` variable in the Makefile (currently i386, x86_64, arm64), you can use the `test` target, which cleans and builds for each:
 ```bash

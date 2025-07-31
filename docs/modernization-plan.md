@@ -1,8 +1,16 @@
 # Modernization Plan
 
+**IMPORTANT NOTICE:** This document outlines initial modernization ideas. For the current, comprehensive architectural vision and strategy for Harvey OS, please refer to:
+*   `docs/architectural-manifesto.md`
+*   `docs/ci-strategy.md`
+*   `docs/systematic-modernization.md`
+
+This document may contain outdated information or approaches that have been refined in the above-mentioned core strategy documents.
+
 This document outlines the high level tasks required to refactor the Harvey utilities to modern C17, C++17 and portable assembly.
 
 ## C17 Migration
+Note: The detailed C17 migration strategy is now covered in 'docs/systematic-modernization.md'.
 
 - Audit existing C sources for deprecated constructs and Plan 9 specific extensions.
 - Use `scripts/analyze_repo.py` to track remaining Plan9 constructs in the `acd` sources.
@@ -23,6 +31,7 @@ This document outlines the high level tasks required to refactor the Harvey util
 - Document calling conventions and ensure the assembly integrates with modern toolchains.
 
 ## Continuous Integration
+Note: The comprehensive CI strategy is now detailed in 'docs/ci-strategy.md'.
 
 - Use `pre-commit` to run clang-format, clang-tidy and build checks.
 - Update the build scripts in `modern/` to handle both C and C++ sources.
