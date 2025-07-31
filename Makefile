@@ -9,10 +9,10 @@ CXXFLAGS ?= -std=c++17 -Wall -Wextra -Wpedantic -Werror
 # Build the modern utilities for the selected ARCH
 .PHONY: all test clean
 all:
-	$(MAKE) -C modern ARCH=$(ARCH) CFLAGS="$(CFLAGS)" CXXFLAGS="$(CXXFLAGS)" all
+	$(MAKE) -C modern TARGET_ARCH=$(ARCH) CFLAGS="$(CFLAGS)" CXXFLAGS="$(CXXFLAGS)" all
 
 test:
-	$(MAKE) -C modern ARCHS="$(ARCHS)" CFLAGS="$(CFLAGS)" CXXFLAGS="$(CXXFLAGS)" test
+	@for a in $(ARCHS); do 	        $(MAKE) -C modern TARGET_ARCH=$$a CFLAGS="$(CFLAGS)" CXXFLAGS="$(CXXFLAGS)" clean; 	        $(MAKE) -C modern TARGET_ARCH=$$a CFLAGS="$(CFLAGS)" CXXFLAGS="$(CXXFLAGS)" all; 	    done
 
 clean:
 	$(MAKE) -C modern clean
