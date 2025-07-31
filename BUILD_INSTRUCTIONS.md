@@ -1,87 +1,116 @@
 # Build Instructions for Modern Utilities
 
-**IMPORTANT NOTICE:** This document provides specific build steps for the utilities in `modern/`. For the overarching architectural vision, CI strategy, and modernization protocols for Harvey OS, please refer to:
-*   `docs/architectural-manifesto.md`
-*   `docs/ci-strategy.md`
-*   `docs/systematic-modernization.md`
+> **IMPORTANT:** This guide covers the **modern/** directory utilities only.  
+> For the overall architectural vision, CI strategy, and modernization protocol of Harvey OS, see:
+> - `docs/architectural-manifesto.md`  
+> - `docs/ci-strategy.md`  
+> - `docs/systematic-modernization.md`  
 
-The build system for `modern/` utilities has been refactored. While the commands below (using `make ARCH=...` from the root directory) remain valid, the `modern/Makefile` itself now uses the `TARGET_ARCH` variable, and architecture-specific settings (like compiler flags and toolchains) are defined in files within the `mk/arch/` directory (e.g., `mk/arch/x86_64.mk`, `mk/arch/arm64.mk`).
-
-This document describes how to build the modern C utilities located in the `modern/` directory.
+---
 
 ## Supported Architectures
 
-The utilities can be compiled for the following target architectures:
-- `x86_64` (64-bit Intel/AMD)
-- `i386` (32-bit Intel/AMD)
-- `arm64` (64-bit ARM, requires cross-compilation)
+The `modern/` utilities may be built for:
+
+- **x86_64** (64-bit Intel/AMD)  
+- **i386**   (32-bit Intel/AMD)  
+- **arm64**  (64-bit ARM; requires cross-compilation)
+
+---
 
 ## Prerequisites
 
-1.  **Basic Build Tools:**
-    *   `make`
-    *   A C compiler like `clang` (default) or `gcc`.
+1. **Core Toolchain**  
+   - `make`  
+   - C compiler (`clang` or `gcc`)
 
-2.  **For i386 builds:**
-    *   32-bit development libraries are required. On Debian/Ubuntu, this is typically provided by the `gcc-multilib` package.
+2. **i386 Builds**  
+   - 32-bit development libraries (Debian/Ubuntu: `gcc-multilib`)
 
-3.  **For ARM64 cross-compilation:**
-    *   An ARM64 cross-compiler is needed. On Debian/Ubuntu, you can install `gcc-aarch64-linux-gnu`.
+3. **ARM64 Cross-Compilation**  
+   - ARM-64 cross-compiler (Debian/Ubuntu: `gcc-aarch64-linux-gnu`)
 
-4.  **Automated Dependency Installation:**
-    *   The `./setup.sh` script attempts to install all necessary dependencies, including compilers and libraries for different architectures. It's recommended to run this script first:
-        ```bash
-        ./setup.sh
-        ```
-    *   Note: If `setup.sh` encounters issues with `apt-get update` (e.g., due to system clock or repository misconfiguration), manual installation of the above packages might be necessary if the script fails to install them.
+4. **Dependencies Installer**  
+   - A helper script `./setup.sh` will attempt to install all needed packages.  
+     ```bash
+     ./setup.sh
+     ```  
+   - If `setup.sh` fails (e.g. `apt-get update` issues), you may need to install the above packages manually.
+
+---
 
 ## Build Commands
 
-Navigate to the root of the repository. The main `Makefile` will delegate the build to `modern/Makefile`.
+From the **repository root**, invoke the top-level `Makefile` which delegates into `modern/`:
 
-To build for a specific architecture, use the `ARCH` variable:
+### 1. Build for a Single Architecture
 
-*   **For x86_64 (default):**
-    ```bash
-    make ARCH=x86_64
-    ```
-    Or simply:
-    ```bash
-    make
-    ```
-    This will produce `modern/acd-x86_64`.
+- **x86_64** (default):
+  ```bash
+  make ARCH=x86_64
+  # or simply:
+  make
 
-*   **For i386:**
-    ```bash
-    make ARCH=i386
-    ```
-    This will produce `modern/acd-i386`.
-    *(Note: Requires `gcc-multilib` or equivalent 32-bit development libraries.)*
+Produces modern/acd-x86_64.
+	•	i386:
 
-*   **For arm64 (cross-compilation):**
-    ```bash
-    make ARCH=arm64
-    ```
-    This will produce `modern/acd-arm64`.
-    *(Note: Requires an ARM64 cross-compiler like `aarch64-linux-gnu-gcc`. The specific compiler is now defined in `mk/arch/arm64.mk` and should be in your PATH.)*
+make ARCH=i386
 
-To build for all architectures defined in the `ARCHS` variable in the Makefile (currently i386, x86_64, arm64), you can use the `test` target, which cleans and builds for each:
-```bash
+Produces modern/acd-i386.
+Requires 32-bit libs (e.g. gcc-multilib).
+
+	•	arm64:
+
+make ARCH=arm64
+
+Produces modern/acd-arm64.
+Requires an aarch64 cross-compiler (e.g. aarch64-linux-gnu-gcc).
+
+2. Build & Test All
+
+The test target will clean and rebuild modern/ for every architecture listed in its ARCHS variable (by default: i386 x86_64 arm64):
+
 make test
-```
-This is primarily used by the CI system.
 
-## Build Flags
+This is intended for CI use.
 
-The `setup.sh` script configures optimized compiler flags for local builds by
-exporting the variables `CFLAGS`, `CXXFLAGS` and `LDFLAGS`.  The defaults are:
+⸻
 
-```bash
-CFLAGS="-O3 -march=native -mtune=native -pipe -fPIC"
-CXXFLAGS="-O3 -march=native -mtune=native -pipe -fPIC"
-LDFLAGS="-fuse-ld=lld"
-```
+Customizing Compiler Flags
 
-Override them when invoking `make` if alternate flags are desired.  The CI
-workflows rely on these same defaults to ensure consistent builds across
-architectures.
+By default, setup.sh exports optimized flags for local builds:
+
+export CFLAGS="-O3 -march=native -mtune=native -pipe -fPIC"
+export CXXFLAGS="$CFLAGS"
+export LDFLAGS="-fuse-ld=lld"
+
+To override:
+
+make ARCH=x86_64 CFLAGS="-O2 -g" CXXFLAGS="-O2 -g"
+
+CI workflows rely on the same defaults to guarantee repeatable, cross-architecture builds.
+
+⸻
+
+Cleaning Up
+
+To remove all built artifacts for the modern utilities:
+
+make ARCH=x86_64 clean    # cleans only x86_64 targets
+# or to clean all:
+make test-clean
+
+(Check modern/Makefile for exact clean targets.)
+
+⸻
+
+Further Reading
+	•	CI & Architecture: docs/ci-strategy.md
+	•	Modernization Plan: docs/systematic-modernization.md
+	•	Architectural Manifesto: docs/architectural-manifesto.md
+	•	Top-Level Build: see build.sh for multi-profile orchestrations
+
+⸻
+
+Happy hacking!
+

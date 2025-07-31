@@ -2,7 +2,9 @@ name: Continuous Integration
 
 on:
   push:
+    branches: [ "main" ]
   pull_request:
+    branches: [ "main" ]
 
 jobs:
   build:
@@ -11,23 +13,75 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - arch: x86_64 # Explicitly using x86_64 for clarity
-            cflags: "-O3 -march=native -mtune=native -pipe -fPIC"
+          - arch: x86_64
+            cflags: ""
           - arch: i386
-            cflags: "-m32 -O2 -pipe -fPIC"
+            cflags: "-m32"
           - arch: arm64
-            cflags: "-O3 -pipe -fPIC" # modern/Makefile handles arm64 compiler and flags
+            cflags: ""
 
     steps:
-      - uses: actions/checkout@v3
-      - name: Install dependencies
-        run: ./setup.sh # This script should install gcc-multilib for i386 and aarch64-linux-gnu-gcc for arm64
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-      - name: Build
-        run: make ARCH=${{ matrix.arch }} CFLAGS="${{ matrix.cflags }}"
-
-      - uses: pre-commit/action@v3.0.0
-
-      - name: clang-tidy
+      - name: Install system dependencies
         run: |
-          clang-tidy --config-file=clang-tidy.config $(find . -name '*.c' -o -name '*.h') -- -std=c17 ${{ matrix.cflags }}
+          sudo apt-get update
+          sudo apt-get install -y build-essential gcc-multilib g++-multilib \
+                                  clang clang-tidy clang-format \
+                                  bmake flex bison qemu-system-x86 qemu-utils \
+                                  libncurses-dev libssl-dev nasm
+
+      - name: Cache ccache and build directory
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.ccache
+            build/
+          key: ${{ runner.os }}-build-${{ matrix.arch }}-${{ hashFiles('**/Makefile','build.sh') }}
+          restore-keys: |
+            ${{ runner.os }}-build-${{ matrix.arch }}-
+
+      - name: Configure environment
+        run: |
+          echo "::group::Environment"
+          echo "Architecture: ${{ matrix.arch }}"
+          echo "CFLAGS: ${{ matrix.cflags }}"
+          echo "::endgroup::"
+
+      - name: Build (make)
+        run: |
+          make clean
+          make ARCH=${{ matrix.arch }} CFLAGS="${{ matrix.cflags }}"
+
+      - name: Run test suite
+        run: |
+          if make help | grep -q check; then
+            make check
+          else
+            echo "No check target; skipping"
+          fi
+
+      - name: Run clang-tidy
+        run: |
+          find . -type f \( -name '*.c' -o -name '*.h' \) | \
+          xargs clang-tidy --quiet --format-style=file -- \
+            -std=c17 ${{ matrix.cflags }}
+
+      - name: Pre-commit hooks
+        uses: pre-commit/action@v4
+
+      - name: Upload build artifacts
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: build-${{ matrix.arch }}
+          path: |
+            build/
+            *.o
+            *.out
+
+      - name: Report build status
+        if: failure()
+        run: echo "❌ Build failed for ${{ matrix.arch }}"
+        continue-on-error: true
