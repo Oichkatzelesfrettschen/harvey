@@ -6,9 +6,11 @@
 #include <stdint.h>
 #include <stdio.h>
 
-/*
- * Entry point demonstrating argument parsing and spinlock usage. The program
- * simply prints the parsed arguments and exits.
+/**
+ * @brief Entry point for the example CD utility.
+ *
+ * Demonstrates argument parsing and spinlock usage. The program simply prints
+ * the parsed arguments and exits.
  */
 int main(int argc, char **argv) {
     CmdArgs args = parse_args((int32_t)argc, argv);
